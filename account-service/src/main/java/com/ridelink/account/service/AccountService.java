@@ -16,4 +16,7 @@ public class AccountService {
     public Account createAccount(Account account) {
         return accountRepository.save(account);
     }
+     public Account getAccountById(String id) {
+        return accountRepository.findById(id).orElse(null);
+    }
 }

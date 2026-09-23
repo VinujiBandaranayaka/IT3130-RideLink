@@ -20,4 +20,8 @@ public class AccountController {
     public Account createAccount(@RequestBody Account account) {
         return accountService.createAccount(account);
     }
+    @GetMapping("/{id}")
+public Account getAccountById(@PathVariable String id) {
+    return accountService.getAccountById(id);
+}
 }
