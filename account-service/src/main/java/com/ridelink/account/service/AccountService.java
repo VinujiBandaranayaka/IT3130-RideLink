@@ -9,6 +9,7 @@ import com.ridelink.account.repository.AccountRepository;
 import com.ridelink.account.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.ridelink.account.exception.AccountNotFoundException;
 
 @Service
 public class AccountService {
@@ -48,16 +49,15 @@ public class AccountService {
 
     public AccountResponse getAccountById(String id) {
 
-        Account account = accountRepository.findById(id)
-                .orElse(null);
+    Account account = accountRepository.findById(id)
+            .orElseThrow(() ->
+                    new AccountNotFoundException(
+                            "Account not found with id: " + id
+                    )
+            );
 
-        if (account == null) {
-            return null;
-        }
-
-        return toAccountResponse(account);
-    }
-
+    return toAccountResponse(account);
+}
     public LoginResponse login(LoginRequest request) {
 
         Account account = accountRepository
@@ -71,6 +71,9 @@ public class AccountService {
                 account.getPassword()
         )) {
             throw new RuntimeException("Invalid email or password");
+        }
+        if (!"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+            throw new RuntimeException("Account is not active");
         }
 
         String token = jwtService.generateToken(
