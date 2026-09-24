@@ -3,6 +3,7 @@ package com.ridelink.account.service;
 import com.ridelink.account.dto.AccountResponse;
 import com.ridelink.account.dto.LoginRequest;
 import com.ridelink.account.dto.LoginResponse;
+import com.ridelink.account.dto.RegisterRequest;
 import com.ridelink.account.model.Account;
 import com.ridelink.account.repository.AccountRepository;
 import com.ridelink.account.security.JwtService;
@@ -26,11 +27,19 @@ public class AccountService {
         this.jwtService = jwtService;
     }
 
-    public AccountResponse createAccount(Account account) {
+    public AccountResponse createAccount(RegisterRequest request) {
+
+        Account account = new Account();
+
+        account.setName(request.getName());
+        account.setEmail(request.getEmail());
 
         account.setPassword(
-                passwordEncoder.encode(account.getPassword())
+                passwordEncoder.encode(request.getPassword())
         );
+
+        account.setRole(request.getRole());
+        account.setStatus(request.getStatus());
 
         Account savedAccount = accountRepository.save(account);
 

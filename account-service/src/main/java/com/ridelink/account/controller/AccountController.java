@@ -3,8 +3,9 @@ package com.ridelink.account.controller;
 import com.ridelink.account.dto.AccountResponse;
 import com.ridelink.account.dto.LoginRequest;
 import com.ridelink.account.dto.LoginResponse;
-import com.ridelink.account.model.Account;
+import com.ridelink.account.dto.RegisterRequest;
 import com.ridelink.account.service.AccountService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,8 +21,10 @@ public class AccountController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AccountResponse createAccount(@RequestBody Account account) {
-        return accountService.createAccount(account);
+    public AccountResponse createAccount(
+            @Valid @RequestBody RegisterRequest request
+    ) {
+        return accountService.createAccount(request);
     }
 
     @GetMapping("/{id}")
