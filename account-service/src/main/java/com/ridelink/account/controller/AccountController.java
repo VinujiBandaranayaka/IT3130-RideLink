@@ -28,14 +28,20 @@ public class AccountController {
     }
 
     @GetMapping("/{id}")
-    public AccountResponse getAccountById(@PathVariable String id) {
+    public AccountResponse getAccountById(
+            @PathVariable String id
+    ) {
         return accountService.getAccountById(id);
     }
 
-     @PostMapping("/login")
-public LoginResponse login(
-        @Valid @RequestBody LoginRequest request
-) {
-    return accountService.login(request);
+    @PostMapping("/login")
+    public LoginResponse login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        return accountService.login(request);
+    }
+    @GetMapping("/admin/test")
+public String adminTest() {
+    return "Admin access granted";
 }
 }
