@@ -4,12 +4,13 @@ import com.ridelink.account.dto.AccountResponse;
 import com.ridelink.account.dto.LoginRequest;
 import com.ridelink.account.dto.LoginResponse;
 import com.ridelink.account.dto.RegisterRequest;
+import com.ridelink.account.exception.AccountNotFoundException;
+import com.ridelink.account.exception.EmailAlreadyExistsException;
 import com.ridelink.account.model.Account;
 import com.ridelink.account.repository.AccountRepository;
 import com.ridelink.account.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.ridelink.account.exception.AccountNotFoundException;
 
 @Service
 public class AccountService {
@@ -30,15 +31,19 @@ public class AccountService {
 
     public AccountResponse createAccount(RegisterRequest request) {
 
+        if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException(
+                    "An account with this email already exists"
+            );
+        }
+
         Account account = new Account();
 
         account.setName(request.getName());
         account.setEmail(request.getEmail());
-
         account.setPassword(
                 passwordEncoder.encode(request.getPassword())
         );
-
         account.setRole(request.getRole());
         account.setStatus(request.getStatus());
 
@@ -49,15 +54,16 @@ public class AccountService {
 
     public AccountResponse getAccountById(String id) {
 
-    Account account = accountRepository.findById(id)
-            .orElseThrow(() ->
-                    new AccountNotFoundException(
-                            "Account not found with id: " + id
-                    )
-            );
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() ->
+                        new AccountNotFoundException(
+                                "Account not found with id: " + id
+                        )
+                );
 
-    return toAccountResponse(account);
-}
+        return toAccountResponse(account);
+    }
+
     public LoginResponse login(LoginRequest request) {
 
         Account account = accountRepository
@@ -72,6 +78,7 @@ public class AccountService {
         )) {
             throw new RuntimeException("Invalid email or password");
         }
+
         if (!"ACTIVE".equalsIgnoreCase(account.getStatus())) {
             throw new RuntimeException("Account is not active");
         }
