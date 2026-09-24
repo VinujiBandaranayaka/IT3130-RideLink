@@ -1,5 +1,8 @@
 package com.ridelink.account.controller;
 
+import com.ridelink.account.dto.AccountResponse;
+import com.ridelink.account.dto.LoginRequest;
+import com.ridelink.account.dto.LoginResponse;
 import com.ridelink.account.model.Account;
 import com.ridelink.account.service.AccountService;
 import org.springframework.http.HttpStatus;
@@ -17,11 +20,17 @@ public class AccountController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Account createAccount(@RequestBody Account account) {
+    public AccountResponse createAccount(@RequestBody Account account) {
         return accountService.createAccount(account);
     }
+
     @GetMapping("/{id}")
-public Account getAccountById(@PathVariable String id) {
-    return accountService.getAccountById(id);
-}
+    public AccountResponse getAccountById(@PathVariable String id) {
+        return accountService.getAccountById(id);
+    }
+
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody LoginRequest request) {
+        return accountService.login(request);
+    }
 }
