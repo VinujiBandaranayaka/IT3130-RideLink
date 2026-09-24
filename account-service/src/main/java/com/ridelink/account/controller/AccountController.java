@@ -32,8 +32,10 @@ public class AccountController {
         return accountService.getAccountById(id);
     }
 
-    @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
-        return accountService.login(request);
-    }
+     @PostMapping("/login")
+public LoginResponse login(
+        @Valid @RequestBody LoginRequest request
+) {
+    return accountService.login(request);
+}
 }
