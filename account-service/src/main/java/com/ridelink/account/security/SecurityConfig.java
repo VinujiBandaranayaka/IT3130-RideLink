@@ -1,4 +1,4 @@
-package com.ridelink.account.security;
+ package com.ridelink.account.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,21 +24,51 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http
+    ) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
+
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
                 )
+
                 .authorizeHttpRequests(auth -> auth
-        .requestMatchers(
-                "/api/accounts",
-                "/api/accounts/login",
-                "/error"
-        ).permitAll()
-        .anyRequest().authenticated()
-)
+
+                        // Account registration
+                        .requestMatchers("/api/accounts")
+                        .permitAll()
+
+                        // Login
+                        .requestMatchers("/api/accounts/login")
+                        .permitAll()
+
+                        // Swagger / OpenAPI
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/webjars/**"
+                        )
+                        .permitAll()
+
+                        // Error endpoint
+                        .requestMatchers("/error")
+                        .permitAll()
+
+                        // Admin-only endpoints
+                        .requestMatchers("/api/accounts/admin/**")
+                        .hasRole("ADMIN")
+
+                        // All other endpoints require JWT
+                        .anyRequest()
+                        .authenticated()
+                )
+
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
