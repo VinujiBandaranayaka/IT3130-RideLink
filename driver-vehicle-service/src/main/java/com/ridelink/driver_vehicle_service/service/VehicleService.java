@@ -1,6 +1,8 @@
 package com.ridelink.driver_vehicle_service.service;
 
+import com.ridelink.driver_vehicle_service.exception.ResourceNotFoundException;
 import com.ridelink.driver_vehicle_service.model.Vehicle;
+import com.ridelink.driver_vehicle_service.repository.DriverRepository;
 import com.ridelink.driver_vehicle_service.repository.VehicleRepository;
 import org.springframework.stereotype.Service;
 
@@ -10,23 +12,43 @@ import java.util.Optional;
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
+    private final DriverRepository driverRepository;
 
-    public VehicleService(VehicleRepository vehicleRepository) {
+    public VehicleService(
+            VehicleRepository vehicleRepository,
+            DriverRepository driverRepository) {
+
         this.vehicleRepository = vehicleRepository;
+        this.driverRepository = driverRepository;
     }
 
-    // Create vehicle
     public Vehicle createVehicle(String driverId, Vehicle vehicle) {
+
+        // Check whether the driver exists
+        if (!driverRepository.existsById(driverId)) {
+            throw new ResourceNotFoundException(
+                    "Driver not found with id: " + driverId
+            );
+        }
+
+        // Prevent duplicate vehicle registration numbers
+        if (vehicleRepository.existsByRegistrationNumber(
+                vehicle.getRegistrationNumber())) {
+
+            throw new IllegalArgumentException(
+                    "Vehicle registration number already exists"
+            );
+        }
+
         vehicle.setDriverId(driverId);
+
         return vehicleRepository.save(vehicle);
     }
 
-    // Get vehicle by driver ID
     public Optional<Vehicle> getVehicleByDriverId(String driverId) {
         return vehicleRepository.findByDriverId(driverId);
     }
 
-    // Update vehicle
     public Optional<Vehicle> updateVehicle(
             String driverId,
             Vehicle updatedVehicle) {
@@ -41,7 +63,8 @@ public class VehicleService {
             vehicle.setRegistrationNumber(
                     updatedVehicle.getRegistrationNumber());
 
-            vehicle.setModel(updatedVehicle.getModel());
+            vehicle.setModel(
+                    updatedVehicle.getModel());
 
             vehicle.setVehicleType(
                     updatedVehicle.getVehicleType());
@@ -49,13 +72,14 @@ public class VehicleService {
             vehicle.setCapacity(
                     updatedVehicle.getCapacity());
 
-            return Optional.of(vehicleRepository.save(vehicle));
+            return Optional.of(
+                    vehicleRepository.save(vehicle)
+            );
         }
 
         return Optional.empty();
     }
 
-    // Delete vehicle
     public boolean deleteVehicle(String driverId) {
 
         Optional<Vehicle> vehicle =

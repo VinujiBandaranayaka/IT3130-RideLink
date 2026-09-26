@@ -1,6 +1,7 @@
 package com.ridelink.driver_vehicle_service.service;
 
 import com.ridelink.driver_vehicle_service.model.Vehicle;
+import com.ridelink.driver_vehicle_service.repository.DriverRepository;
 import com.ridelink.driver_vehicle_service.repository.VehicleRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,9 @@ class VehicleServiceTest {
     @Mock
     private VehicleRepository vehicleRepository;
 
+    @Mock
+    private DriverRepository driverRepository;
+
     @InjectMocks
     private VehicleService vehicleService;
 
@@ -32,18 +36,100 @@ class VehicleServiceTest {
         vehicle.setVehicleType("CAR");
         vehicle.setCapacity(4);
 
+        when(driverRepository.existsById("driver123"))
+                .thenReturn(true);
+
+        when(vehicleRepository.existsByRegistrationNumber(
+                "CAB-1234"))
+                .thenReturn(false);
+
         when(vehicleRepository.save(vehicle))
                 .thenReturn(vehicle);
 
         Vehicle result =
-                vehicleService.createVehicle("driver123", vehicle);
+                vehicleService.createVehicle(
+                        "driver123",
+                        vehicle
+                );
 
         assertNotNull(result);
-        assertEquals("driver123", result.getDriverId());
-        assertEquals("CAB-1234",
-                result.getRegistrationNumber());
+        assertEquals(
+                "driver123",
+                result.getDriverId()
+        );
+        assertEquals(
+                "CAB-1234",
+                result.getRegistrationNumber()
+        );
 
-        verify(vehicleRepository).save(vehicle);
+        verify(driverRepository)
+                .existsById("driver123");
+
+        verify(vehicleRepository)
+                .existsByRegistrationNumber("CAB-1234");
+
+        verify(vehicleRepository)
+                .save(vehicle);
+    }
+
+    @Test
+    void createVehicle_shouldRejectNonExistingDriver() {
+
+        Vehicle vehicle = new Vehicle();
+
+        vehicle.setRegistrationNumber("CAB-5678");
+        vehicle.setModel("Toyota Prius");
+        vehicle.setVehicleType("CAR");
+        vehicle.setCapacity(4);
+
+        when(driverRepository.existsById("invalid-driver"))
+                .thenReturn(false);
+
+        assertThrows(
+                RuntimeException.class,
+                () -> vehicleService.createVehicle(
+                        "invalid-driver",
+                        vehicle
+                )
+        );
+
+        verify(driverRepository)
+                .existsById("invalid-driver");
+
+        verify(vehicleRepository, never())
+                .save(any(Vehicle.class));
+    }
+
+    @Test
+    void createVehicle_shouldRejectDuplicateRegistration() {
+
+        Vehicle vehicle = new Vehicle();
+
+        vehicle.setRegistrationNumber("CAB-1234");
+        vehicle.setModel("Toyota Prius");
+        vehicle.setVehicleType("CAR");
+        vehicle.setCapacity(4);
+
+        when(driverRepository.existsById("driver123"))
+                .thenReturn(true);
+
+        when(vehicleRepository.existsByRegistrationNumber(
+                "CAB-1234"))
+                .thenReturn(true);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> vehicleService.createVehicle(
+                        "driver123",
+                        vehicle
+                )
+        );
+
+        verify(vehicleRepository)
+                .existsByRegistrationNumber("CAB-1234");
+
+        verify(vehicleRepository, never())
+                .save(any(Vehicle.class));
     }
 
     @Test
@@ -58,9 +144,12 @@ class VehicleServiceTest {
                 .thenReturn(Optional.of(vehicle));
 
         Optional<Vehicle> result =
-                vehicleService.getVehicleByDriverId("driver123");
+                vehicleService.getVehicleByDriverId(
+                        "driver123"
+                );
 
         assertTrue(result.isPresent());
+
         assertEquals(
                 "CAB-1234",
                 result.get().getRegistrationNumber()
@@ -74,6 +163,7 @@ class VehicleServiceTest {
     void deleteVehicle_shouldDeleteExistingVehicle() {
 
         Vehicle vehicle = new Vehicle();
+
         vehicle.setDriverId("driver123");
 
         when(vehicleRepository.findByDriverId("driver123"))
@@ -84,6 +174,7 @@ class VehicleServiceTest {
 
         assertTrue(result);
 
-        verify(vehicleRepository).delete(vehicle);
+        verify(vehicleRepository)
+                .delete(vehicle);
     }
 }

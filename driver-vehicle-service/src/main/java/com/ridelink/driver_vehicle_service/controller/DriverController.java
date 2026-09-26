@@ -3,15 +3,20 @@ package com.ridelink.driver_vehicle_service.controller;
 import com.ridelink.driver_vehicle_service.model.AvailabilityStatus;
 import com.ridelink.driver_vehicle_service.model.Driver;
 import com.ridelink.driver_vehicle_service.service.DriverService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/drivers")
+@Validated
 public class DriverController {
 
     private final DriverService driverService;
@@ -22,7 +27,9 @@ public class DriverController {
 
     // Create driver
     @PostMapping
-    public ResponseEntity<Driver> createDriver(@Valid @RequestBody Driver driver) {
+    public ResponseEntity<Driver> createDriver(
+            @Valid @RequestBody Driver driver) {
+
         return new ResponseEntity<>(
                 driverService.createDriver(driver),
                 HttpStatus.CREATED
@@ -32,12 +39,15 @@ public class DriverController {
     // Get all drivers
     @GetMapping
     public ResponseEntity<List<Driver>> getAllDrivers() {
-        return ResponseEntity.ok(driverService.getAllDrivers());
+        return ResponseEntity.ok(
+                driverService.getAllDrivers()
+        );
     }
 
     // Get driver by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Driver> getDriverById(@PathVariable String id) {
+    public ResponseEntity<Driver> getDriverById(
+            @PathVariable String id) {
 
         return driverService.getDriverById(id)
                 .map(ResponseEntity::ok)
@@ -50,7 +60,8 @@ public class DriverController {
             @PathVariable String id,
             @Valid @RequestBody Driver driver) {
 
-        Driver updatedDriver = driverService.updateDriver(id, driver);
+        Driver updatedDriver =
+                driverService.updateDriver(id, driver);
 
         if (updatedDriver == null) {
             return ResponseEntity.notFound().build();
@@ -61,7 +72,8 @@ public class DriverController {
 
     // Delete driver
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDriver(@PathVariable String id) {
+    public ResponseEntity<Void> deleteDriver(
+            @PathVariable String id) {
 
         if (driverService.deleteDriver(id)) {
             return ResponseEntity.noContent().build();
@@ -76,7 +88,10 @@ public class DriverController {
             @PathVariable String id,
             @RequestParam AvailabilityStatus availability) {
 
-        return driverService.updateAvailability(id, availability)
+        return driverService.updateAvailability(
+                        id,
+                        availability
+                )
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -85,10 +100,36 @@ public class DriverController {
     @PatchMapping("/{id}/location")
     public ResponseEntity<Driver> updateLocation(
             @PathVariable String id,
-            @RequestParam Double latitude,
-            @RequestParam Double longitude) {
 
-        return driverService.updateLocation(id, latitude, longitude)
+            @RequestParam
+            @NotNull(message = "Latitude is required")
+            @DecimalMin(
+                    value = "-90.0",
+                    message = "Latitude must be between -90 and 90"
+            )
+            @DecimalMax(
+                    value = "90.0",
+                    message = "Latitude must be between -90 and 90"
+            )
+            Double latitude,
+
+            @RequestParam
+            @NotNull(message = "Longitude is required")
+            @DecimalMin(
+                    value = "-180.0",
+                    message = "Longitude must be between -180 and 180"
+            )
+            @DecimalMax(
+                    value = "180.0",
+                    message = "Longitude must be between -180 and 180"
+            )
+            Double longitude) {
+
+        return driverService.updateLocation(
+                        id,
+                        latitude,
+                        longitude
+                )
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -96,7 +137,9 @@ public class DriverController {
     // Get available drivers
     @GetMapping("/available")
     public ResponseEntity<List<Driver>> getAvailableDrivers() {
-        return ResponseEntity.ok(driverService.getAvailableDrivers());
+        return ResponseEntity.ok(
+                driverService.getAvailableDrivers()
+        );
     }
 
     // Get available drivers by service area
@@ -105,7 +148,9 @@ public class DriverController {
             @PathVariable String serviceArea) {
 
         return ResponseEntity.ok(
-                driverService.getAvailableDriversByArea(serviceArea)
+                driverService.getAvailableDriversByArea(
+                        serviceArea
+                )
         );
     }
 }
