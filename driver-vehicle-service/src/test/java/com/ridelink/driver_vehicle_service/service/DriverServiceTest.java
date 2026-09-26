@@ -113,4 +113,41 @@ class DriverServiceTest {
         verify(driverRepository)
                 .findByAvailability(AvailabilityStatus.AVAILABLE);
     }
+    @Test
+    void updateDriver_shouldReturnNullWhenDriverDoesNotExist() {
+
+        when(driverRepository.findById("invalid-id"))
+                .thenReturn(Optional.empty());
+
+        Driver driver = new Driver();
+
+        Driver result =
+                driverService.updateDriver(
+                        "invalid-id",
+                        driver
+                );
+
+        assertNull(result);
+
+        verify(driverRepository)
+                .findById("invalid-id");
+        }
+
+        @Test
+        void deleteDriver_shouldReturnFalseWhenDriverDoesNotExist() {
+
+        when(driverRepository.existsById("invalid-id"))
+                .thenReturn(false);
+
+        boolean result =
+                driverService.deleteDriver("invalid-id");
+
+        assertFalse(result);
+
+        verify(driverRepository)
+                .existsById("invalid-id");
+
+        verify(driverRepository, never())
+                .deleteById("invalid-id");
+        }
 }
