@@ -3,6 +3,9 @@ package com.ridelink.driver_vehicle_service.controller;
 import com.ridelink.driver_vehicle_service.model.AvailabilityStatus;
 import com.ridelink.driver_vehicle_service.model.Driver;
 import com.ridelink.driver_vehicle_service.service.DriverService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -26,6 +29,20 @@ public class DriverController {
     }
 
     // Create driver
+    @Operation(
+            summary = "Create a new driver",
+            description = "Creates a new driver operational profile"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Driver created successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid driver data"
+            )
+    })
     @PostMapping
     public ResponseEntity<Driver> createDriver(
             @Valid @RequestBody Driver driver) {
@@ -45,6 +62,20 @@ public class DriverController {
     }
 
     // Get driver by ID
+    @Operation(
+            summary = "Get driver by ID",
+            description = "Retrieves a driver using the driver ID"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Driver found"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Driver not found"
+            )
+    })
     @GetMapping("/{id}")
     public ResponseEntity<Driver> getDriverById(
             @PathVariable String id) {
