@@ -4,6 +4,7 @@ import com.ridelink.farepayment.dto.RideDto;
 import com.ridelink.farepayment.exception.ServiceUnavailableException;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
@@ -14,8 +15,6 @@ public class RideClient {
 
     private final RestClient restClient;
 
-
-    // Constructor injection
     public RideClient(
             RestClient.Builder restClientBuilder,
             @Value("${ride.service.url}") String rideServiceUrl) {
@@ -25,12 +24,9 @@ public class RideClient {
                 .build();
     }
 
-
-    // ========================================
-    // GET RIDE BY ID
-    // ========================================
-
-    public RideDto getRideById(String rideId) {
+    public RideDto getRideById(
+            String rideId,
+            String authorizationHeader) {
 
         if (rideId == null || rideId.isBlank()) {
             throw new IllegalArgumentException(
@@ -43,6 +39,13 @@ public class RideClient {
             RideDto ride = restClient
                     .get()
                     .uri("/api/rides/{rideId}", rideId)
+
+                    // Send the same JWT to Member 3
+                    .header(
+                            HttpHeaders.AUTHORIZATION,
+                            authorizationHeader
+                    )
+
                     .retrieve()
                     .body(RideDto.class);
 
@@ -57,7 +60,8 @@ public class RideClient {
         } catch (RestClientResponseException ex) {
 
             throw new ServiceUnavailableException(
-                    "Ride Management Service request failed",
+                    "Ride Management Service request failed: "
+                            + ex.getStatusCode(),
                     ex
             );
 
