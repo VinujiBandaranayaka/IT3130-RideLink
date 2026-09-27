@@ -49,23 +49,14 @@ public class FareController {
             )
     })
     @PostMapping("/estimate")
-public ResponseEntity<FareResponse> estimateFare(
+    public ResponseEntity<FareResponse> estimateFare(
+            @Valid @RequestBody FareEstimateRequest request) {
 
-        @Valid @RequestBody FareEstimateRequest request,
+        FareResponse response =
+                fareService.estimateFare(request);
 
-        @RequestHeader(
-                value = "Authorization",
-                required = false
-        ) String authorizationHeader) {
-
-    FareResponse response =
-            fareService.estimateFare(
-                    request,
-                    authorizationHeader
-            );
-
-    return ResponseEntity.ok(response);
-}
+        return ResponseEntity.ok(response);
+    }
 
 
     // ========================================
@@ -87,23 +78,14 @@ public ResponseEntity<FareResponse> estimateFare(
             )
     })
     @PostMapping("/final")
-public ResponseEntity<FareResponse> calculateFinalFare(
+    public ResponseEntity<FareResponse> calculateFinalFare(
+            @Valid @RequestBody FinalFareRequest request) {
 
-        @Valid @RequestBody FinalFareRequest request,
+        FareResponse response =
+                fareService.calculateFinalFare(request);
 
-        @RequestHeader(
-                value = "Authorization",
-                required = false
-        ) String authorizationHeader) {
-
-    FareResponse response =
-            fareService.calculateFinalFare(
-                    request,
-                    authorizationHeader
-            );
-
-    return ResponseEntity.ok(response);
-}
+        return ResponseEntity.ok(response);
+    }
 
 
     // ========================================
