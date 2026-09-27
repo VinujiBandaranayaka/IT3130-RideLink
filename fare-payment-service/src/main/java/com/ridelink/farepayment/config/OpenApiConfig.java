@@ -1,9 +1,7 @@
 package com.ridelink.farepayment.config;
 
-import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.security.SecurityScheme;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,29 +10,18 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI rideLinkOpenAPI() {
+    public OpenAPI rideLinkFarePaymentOpenAPI() {
 
         return new OpenAPI()
-
                 .info(
                         new Info()
                                 .title("RideLink Fare & Payment Service API")
                                 .version("1.0.0")
                                 .description(
-                                        "REST API for fare calculation, payments and receipts."
-                                )
-                )
-
-                .components(
-                        new Components()
-                                .addSecuritySchemes(
-                                        "bearerAuth",
-                                        new SecurityScheme()
-                                                .type(
-                                                        SecurityScheme.Type.HTTP
-                                                )
-                                                .scheme("bearer")
-                                                .bearerFormat("JWT")
+                                        "Backend microservice responsible for "
+                                                + "fare estimation, final fare calculation, "
+                                                + "simulated payments, payment status "
+                                                + "and receipt generation."
                                 )
                 );
     }

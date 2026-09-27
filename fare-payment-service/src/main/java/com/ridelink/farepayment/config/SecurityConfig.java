@@ -72,12 +72,9 @@ public class SecurityConfig {
                         // =========================
 
                         .requestMatchers(
-                            HttpMethod.POST,
-                            "/api/fares/estimate"
-                             ).hasAnyRole(
-                                "PASSENGER",
-                                "ADMIN"
-                        )
+                                HttpMethod.POST,
+                                "/api/fares/estimate"
+                        ).permitAll()
 
                         .requestMatchers(
                                 "/actuator/health",
