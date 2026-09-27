@@ -108,8 +108,7 @@ public ResponseEntity<FareResponse> calculateFinalFare(
 
     // ========================================
     // 3. GET ESTIMATE BY RIDE ID
-    // ========================================
-
+    // ======================================
     @Operation(
             summary = "Get fare estimate by ride ID",
             description = "Returns the latest stored fare estimate for the specified ride."
