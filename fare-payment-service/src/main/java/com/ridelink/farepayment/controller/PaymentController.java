@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import jakarta.validation.Valid;
 
@@ -25,9 +24,6 @@ import org.springframework.web.bind.annotation.*;
         name = "Payment Management",
         description = "APIs for simulated payments, payment status and receipt retrieval"
 )
-
-@SecurityRequirement(name = "bearerAuth")
-
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -72,24 +68,16 @@ public class PaymentController {
 
     })
     @PostMapping
-public ResponseEntity<PaymentResponse> processPayment(
+    public ResponseEntity<PaymentResponse> processPayment(
+            @Valid @RequestBody PaymentRequest request) {
 
-        @Valid @RequestBody PaymentRequest request,
+        PaymentResponse response =
+                paymentService.processPayment(request);
 
-        @RequestHeader(
-                value = "Authorization"
-        ) String authorizationHeader) {
-
-    PaymentResponse response =
-            paymentService.processPayment(
-                    request,
-                    authorizationHeader
-            );
-
-    return ResponseEntity
-            .status(HttpStatus.CREATED)
-            .body(response);
-}
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
+    }
 
 
     // ========================================

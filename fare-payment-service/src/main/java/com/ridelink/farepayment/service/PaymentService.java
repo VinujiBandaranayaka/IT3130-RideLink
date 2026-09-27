@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-
 @Service
 public class PaymentService {
 
@@ -43,10 +42,7 @@ public class PaymentService {
     private final FareCalculator fareCalculator;
 
 
-    // =========================================================
-    // CONSTRUCTOR
-    // =========================================================
-
+    // Constructor injection
     public PaymentService(
             PaymentRepository paymentRepository,
             ReceiptRepository receiptRepository,
@@ -62,95 +58,22 @@ public class PaymentService {
     }
 
 
-    // =========================================================
+    // ========================================
     // 1. PROCESS PAYMENT
-    // =========================================================
+    // ========================================
 
     public PaymentResponse processPayment(
-            PaymentRequest request,
-            String authorizationHeader) {
+            PaymentRequest request) {
 
-        // Validate request
         validatePaymentRequest(request);
 
-        // Validate JWT / Authorization header
-        validateAuthorizationHeader(
-                authorizationHeader
-        );
 
-
-        // -----------------------------------------------------
-        // Get trusted ride information from Member 3
-        // -----------------------------------------------------
-
-        RideDto ride =
-                rideClient.getRideById(
-                        request.rideId(),
-                        authorizationHeader
-                );
-
-
-        if (ride == null) {
-
-            throw new InvalidFareException(
-                    "Ride information could not be retrieved"
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // Verify passenger
-        // -----------------------------------------------------
-
-        if (!Objects.equals(
-                request.passengerId(),
-                ride.passengerId())) {
-
-            throw new InvalidFareException(
-                    "Passenger does not match the ride"
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // Verify driver
-        // -----------------------------------------------------
-
-        if (!Objects.equals(
-                request.driverId(),
-                ride.driverId())) {
-
-            throw new InvalidFareException(
-                    "Driver does not match the ride"
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // Payment only after ride completion
-        // -----------------------------------------------------
-
-        if (ride.status() == null
-                || !"COMPLETED".equalsIgnoreCase(
-                        ride.status())) {
-
-            throw new InvalidFareException(
-                    "Payment can only be processed "
-                            + "for a completed ride"
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // Generate payment information
-        // -----------------------------------------------------
-
+        // Generate payment ID
         Long paymentId =
-                idGeneratorService.generateId(
-                        "payment"
-                );
+                idGeneratorService.generateId("payment");
 
 
+        // Generate transaction reference
         String transactionRef =
                 "TXN-" + UUID.randomUUID();
 
@@ -159,21 +82,19 @@ public class PaymentService {
                 LocalDateTime.now();
 
 
-        // -----------------------------------------------------
+        // ====================================
         // REQUIRED NEGATIVE SCENARIO
-        //
-        // Simulate payment failure when amount > 100000
-        // -----------------------------------------------------
+        // amount > 100000
+        // ====================================
 
-        if (request.amount().compareTo(
-                MAX_AMOUNT) > 0) {
+        if (request.amount().compareTo(MAX_AMOUNT) > 0) {
 
             Payment failedPayment =
                     new Payment(
                             paymentId,
-                            ride.id(),
-                            ride.passengerId(),
-                            ride.driverId(),
+                            request.rideId(),
+                            request.passengerId(),
+                            request.driverId(),
                             request.amount(),
                             CURRENCY,
                             PaymentStatus.FAILED,
@@ -185,27 +106,61 @@ public class PaymentService {
 
 
             // Save failed payment
-            paymentRepository.save(
-                    failedPayment
-            );
+            paymentRepository.save(failedPayment);
 
 
-            /*
-             * IMPORTANT:
-             * Receipt is NOT generated
-             * for failed payments.
-             */
+            // IMPORTANT:
+            // No receipt is generated
             throw new PaymentFailedException(
-                    "Payment failed because amount "
-                            + "exceeds 100000"
+                    "Payment failed because amount exceeds 100000"
             );
         }
 
 
-        // -----------------------------------------------------
-        // Verify payment amount against trusted ride data
-        // -----------------------------------------------------
+        // ====================================
+        // GET TRUSTED RIDE INFORMATION
+        // ====================================
 
+        RideDto ride =
+                rideClient.getRideById(
+                        request.rideId()
+                );
+
+
+        // Verify ride belongs to passenger
+        if (!Objects.equals(
+                request.passengerId(),
+                ride.passengerId())) {
+
+            throw new InvalidFareException(
+                    "Passenger does not match the ride"
+            );
+        }
+
+
+        // Verify assigned driver
+        if (!Objects.equals(
+                request.driverId(),
+                ride.driverId())) {
+
+            throw new InvalidFareException(
+                    "Driver does not match the ride"
+            );
+        }
+
+
+        // Payment only after ride completion
+        if (ride.status() == null
+                || !"COMPLETED".equalsIgnoreCase(
+                        ride.status())) {
+
+            throw new InvalidFareException(
+                    "Payment can only be processed for a completed ride"
+            );
+        }
+
+
+        // Verify payment amount using trusted ride data
         FareBreakdown breakdown =
                 verifyFareAmount(
                         ride,
@@ -213,9 +168,9 @@ public class PaymentService {
                 );
 
 
-        // -----------------------------------------------------
+        // ====================================
         // SUCCESSFUL PAYMENT
-        // -----------------------------------------------------
+        // ====================================
 
         Payment payment =
                 new Payment(
@@ -234,15 +189,11 @@ public class PaymentService {
 
 
         Payment savedPayment =
-                paymentRepository.save(
-                        payment
-                );
+                paymentRepository.save(payment);
 
 
-        // -----------------------------------------------------
-        // Generate receipt automatically
-        // -----------------------------------------------------
-
+        // Successful payment automatically
+        // generates a receipt
         createReceipt(
                 savedPayment,
                 breakdown
@@ -255,9 +206,9 @@ public class PaymentService {
     }
 
 
-    // =========================================================
+    // ========================================
     // 2. VERIFY FARE AMOUNT
-    // =========================================================
+    // ========================================
 
     private FareBreakdown verifyFareAmount(
             RideDto ride,
@@ -268,33 +219,12 @@ public class PaymentService {
                 || ride.durationMin() == null) {
 
             throw new InvalidFareException(
-                    "Ride distance and duration "
-                            + "are required"
+                    "Ride distance and duration are required"
             );
         }
 
 
-        if (ride.distanceKm().signum() < 0) {
-
-            throw new InvalidFareException(
-                    "Ride distance cannot be negative"
-            );
-        }
-
-
-        if (ride.durationMin().signum() < 0) {
-
-            throw new InvalidFareException(
-                    "Ride duration cannot be negative"
-            );
-        }
-
-
-        // -----------------------------------------------------
-        // NORMAL FARE
-        // surgeMultiplier = 1.0
-        // -----------------------------------------------------
-
+        // Normal fare
         FareBreakdown normalFare =
                 fareCalculator
                         .calculateEstimatedBreakdown(
@@ -310,11 +240,7 @@ public class PaymentService {
         }
 
 
-        // -----------------------------------------------------
-        // PEAK / SURGE FARE
-        // surgeMultiplier = 1.5
-        // -----------------------------------------------------
-
+        // Peak fare
         FareBreakdown peakFare =
                 fareCalculator
                         .calculateFinalBreakdown(
@@ -332,15 +258,14 @@ public class PaymentService {
 
 
         throw new InvalidFareException(
-                "Payment amount does not match "
-                        + "the calculated fare"
+                "Payment amount does not match the calculated fare"
         );
     }
 
 
-    // =========================================================
+    // ========================================
     // 3. CREATE RECEIPT
-    // =========================================================
+    // ========================================
 
     private void createReceipt(
             Payment payment,
@@ -390,28 +315,18 @@ public class PaymentService {
                 );
 
 
-        receiptRepository.save(
-                receipt
-        );
+        receiptRepository.save(receipt);
     }
 
 
-    // =========================================================
+    // ========================================
     // 4. GET PAYMENT
-    // =========================================================
+    // ========================================
 
     public PaymentResponse getPayment(
             Long paymentId) {
 
 
-        if (paymentId == null) {
-
-            throw new ResourceNotFoundException(
-                    "Payment ID is required"
-            );
-        }
-
-
         Payment payment =
                 paymentRepository
                         .findById(paymentId)
@@ -424,28 +339,18 @@ public class PaymentService {
                         );
 
 
-        return toPaymentResponse(
-                payment
-        );
+        return toPaymentResponse(payment);
     }
 
 
-    // =========================================================
+    // ========================================
     // 5. GET RECEIPT
-    // =========================================================
+    // ========================================
 
     public ReceiptResponse getReceipt(
             Long paymentId) {
 
 
-        if (paymentId == null) {
-
-            throw new ResourceNotFoundException(
-                    "Payment ID is required"
-            );
-        }
-
-
         Payment payment =
                 paymentRepository
                         .findById(paymentId)
@@ -458,10 +363,6 @@ public class PaymentService {
                         );
 
 
-        /*
-         * Receipt is only available
-         * for successful payments.
-         */
         if (payment.getStatus()
                 != PaymentStatus.SUCCESS) {
 
@@ -494,9 +395,9 @@ public class PaymentService {
     }
 
 
-    // =========================================================
-    // 6. VALIDATE PAYMENT REQUEST
-    // =========================================================
+    // ========================================
+    // 6. VALIDATE REQUEST
+    // ========================================
 
     private void validatePaymentRequest(
             PaymentRequest request) {
@@ -511,36 +412,21 @@ public class PaymentService {
 
 
         if (request.rideId() == null
-                || request.rideId().isBlank()) {
-
-            throw new InvalidFareException(
-                    "Ride ID is required"
-            );
-        }
-
-
-        if (request.passengerId() == null
-                || request.passengerId().isBlank()) {
-
-            throw new InvalidFareException(
-                    "Passenger ID is required"
-            );
-        }
-
-
-        if (request.driverId() == null
+                || request.rideId().isBlank()
+                || request.passengerId() == null
+                || request.passengerId().isBlank()
+                || request.driverId() == null
                 || request.driverId().isBlank()) {
 
             throw new InvalidFareException(
-                    "Driver ID is required"
+                    "Ride, passenger and driver IDs are required"
             );
         }
 
 
         if (request.amount() == null
                 || request.amount()
-                .compareTo(
-                        BigDecimal.ZERO) <= 0) {
+                        .compareTo(BigDecimal.ZERO) <= 0) {
 
             throw new InvalidFareException(
                     "Payment amount must be greater than zero"
@@ -557,37 +443,9 @@ public class PaymentService {
     }
 
 
-    // =========================================================
-    // 7. VALIDATE AUTHORIZATION HEADER
-    // =========================================================
-
-    private void validateAuthorizationHeader(
-            String authorizationHeader) {
-
-
-        if (authorizationHeader == null
-                || authorizationHeader.isBlank()) {
-
-            throw new InvalidFareException(
-                    "Authorization header is required"
-            );
-        }
-
-
-        if (!authorizationHeader.startsWith(
-                "Bearer ")) {
-
-            throw new InvalidFareException(
-                    "Authorization header must contain "
-                            + "a Bearer token"
-            );
-        }
-    }
-
-
-    // =========================================================
-    // 8. PAYMENT -> RESPONSE
-    // =========================================================
+    // ========================================
+    // 7. PAYMENT -> RESPONSE
+    // ========================================
 
     private PaymentResponse toPaymentResponse(
             Payment payment) {
