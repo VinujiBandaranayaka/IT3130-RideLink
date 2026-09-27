@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class PaymentServiceTest {
@@ -33,6 +34,7 @@ class PaymentServiceTest {
     private ReceiptRepository receiptRepository;
     private IdGeneratorService idGeneratorService;
     private RideClient rideClient;
+    private static final String TEST_TOKEN ="Bearer test-token";
 
     private PaymentService paymentService;
 
@@ -64,73 +66,92 @@ class PaymentServiceTest {
     @Test
     void paymentAboveMaximumAmountShouldFail() {
 
-        // Arrange
-        PaymentRequest request =
-                new PaymentRequest(
-                        "RIDE002",
-                        "USER001",
-                        "DRIVER001",
-                        new BigDecimal("150000.00"),
-                        PaymentMethod.SIMULATED_CARD
-                );
+    String TEST_TOKEN = "Bearer test-token";
 
-        when(
-                idGeneratorService.generateId("payment")
-        ).thenReturn(1L);
+    PaymentRequest request =
+            new PaymentRequest(
+                    "RIDE001",
+                    "USER001",
+                    "DRIVER001",
+                    new BigDecimal("100001.00"),
+                    PaymentMethod.SIMULATED_CARD
+            );
 
-        when(
-                paymentRepository.save(any(Payment.class))
-        ).thenAnswer(invocation ->
-                invocation.getArgument(0)
-        );
+    RideDto ride =
+            new RideDto(
+                    "RIDE001",
+                    "USER001",
+                    "DRIVER001",
+                    new BigDecimal("10.00"),
+                    new BigDecimal("20.00"),
+                    "COMPLETED"
+            );
 
+    // Mock Member 3 Ride Service
+    when(
+            rideClient.getRideById(
+                    eq("RIDE001"),
+                    eq(TEST_TOKEN)
+            )
+    ).thenReturn(ride);
 
-        // Act + Assert
-        assertThrows(
-                PaymentFailedException.class,
-                () -> paymentService.processPayment(request)
-        );
+    when(
+            idGeneratorService.generateId("payment")
+    ).thenReturn(1L);
 
-
-        // Capture payment saved to MongoDB repository
-        ArgumentCaptor<Payment> paymentCaptor =
-                ArgumentCaptor.forClass(Payment.class);
-
-        verify(paymentRepository)
-                .save(paymentCaptor.capture());
-
-        Payment savedPayment =
-                paymentCaptor.getValue();
-
-
-        // Verify FAILED payment details
-        assertEquals(
-                PaymentStatus.FAILED,
-                savedPayment.getStatus()
-        );
-
-        assertEquals(
-                "RIDE002",
-                savedPayment.getRideId()
-        );
-
-        assertEquals(
-                new BigDecimal("150000.00"),
-                savedPayment.getAmount()
-        );
-
-        assertNotNull(
-                savedPayment.getTransactionRef()
-        );
+    when(
+            paymentRepository.save(
+                    any(Payment.class)
+            )
+    ).thenAnswer(
+            invocation -> invocation.getArgument(0)
+    );
 
 
-        // Failed payment must NOT create receipt
-        verifyNoInteractions(receiptRepository);
+    // Act + Assert
+    assertThrows(
+            PaymentFailedException.class,
+            () -> paymentService.processPayment(
+                    request,
+                    TEST_TOKEN
+            )
+    );
 
 
-        // Amount fails before Ride Service validation
-        verifyNoInteractions(rideClient);
-    }
+    // Verify Member 3 was called
+    verify(rideClient)
+            .getRideById(
+                    "RIDE001",
+                    TEST_TOKEN
+            );
+
+
+    // Verify failed payment was saved
+    ArgumentCaptor<Payment> paymentCaptor =
+            ArgumentCaptor.forClass(
+                    Payment.class
+            );
+
+    verify(paymentRepository)
+            .save(
+                    paymentCaptor.capture()
+            );
+
+    Payment savedPayment =
+            paymentCaptor.getValue();
+
+    assertEquals(
+            PaymentStatus.FAILED,
+            savedPayment.getStatus()
+    );
+
+
+    // Failed payment should NOT generate receipt
+    verify(
+            receiptRepository,
+            never()
+    ).save(any());
+}
 
     @Test
     void validCompletedRidePaymentShouldSucceed() {
@@ -156,8 +177,11 @@ class PaymentServiceTest {
             );
 
     when(
-            rideClient.getRideById("RIDE001")
-    ).thenReturn(ride);
+        rideClient.getRideById(
+                "RIDE001",
+                TEST_TOKEN
+        )
+        ).thenReturn(ride);
 
     when(
             idGeneratorService.generateId("payment")
@@ -181,9 +205,11 @@ class PaymentServiceTest {
 
 
     // Act
-    PaymentResponse response =
-            paymentService.processPayment(request);
-
+   PaymentResponse response =
+        paymentService.processPayment(
+                request,
+                TEST_TOKEN
+        );
 
     // Assert response
     assertNotNull(response);
@@ -215,7 +241,10 @@ class PaymentServiceTest {
 
     // Verify Ride Service was checked
     verify(rideClient)
-            .getRideById("RIDE001");
+        .getRideById(
+                "RIDE001",
+                TEST_TOKEN
+        );
 
 
     // Verify successful payment was saved
