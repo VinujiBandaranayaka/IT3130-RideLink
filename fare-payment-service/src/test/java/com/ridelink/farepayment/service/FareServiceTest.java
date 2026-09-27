@@ -24,7 +24,6 @@ class FareServiceTest {
     private FareEstimateRepository fareEstimateRepository;
     private IdGeneratorService idGeneratorService;
     private RideClient rideClient;
-    private static final String TEST_TOKEN = "Bearer test-token";
 
     private FareService fareService;
 
@@ -72,12 +71,8 @@ class FareServiceTest {
                 );
 
         when(
-        rideClient.getRideById(
-                "RIDE001",
-                TEST_TOKEN
-        )
-        )
-        .thenReturn(ride);
+                rideClient.getRideById("RIDE001")
+        ).thenReturn(ride);
 
         when(
                 idGeneratorService.generateId("fare_estimate")
@@ -92,10 +87,7 @@ class FareServiceTest {
 
         // Act
         FareResponse response =
-        fareService.estimateFare(
-                request,
-                TEST_TOKEN
-        );
+                fareService.estimateFare(request);
 
 
         // Assert response
@@ -123,10 +115,7 @@ class FareServiceTest {
 
         // Verify Ride Service was called
         verify(rideClient)
-        .getRideById(
-                "RIDE001",
-                TEST_TOKEN
-        );
+                .getRideById("RIDE001");
 
 
         // Verify fare estimate was saved
@@ -184,20 +173,14 @@ class FareServiceTest {
                 );
 
         when(
-        rideClient.getRideById(
-                "RIDE001",
-                TEST_TOKEN
-        )
-        )
-        .thenReturn(ride);
+                rideClient.getRideById("RIDE001")
+        ).thenReturn(ride);
 
 
         // Act
-       FareResponse response =
-        fareService.calculateFinalFare(
-                request,
-                TEST_TOKEN
-        );
+        FareResponse response =
+                fareService.calculateFinalFare(request);
+
 
         // Assert
         assertNotNull(response);
@@ -229,10 +212,7 @@ class FareServiceTest {
 
 
         verify(rideClient)
-        .getRideById(
-                "RIDE001",
-                TEST_TOKEN
-        );
+                .getRideById("RIDE001");
 
         // Final fare calculation itself
         // does not save a new estimate document.
