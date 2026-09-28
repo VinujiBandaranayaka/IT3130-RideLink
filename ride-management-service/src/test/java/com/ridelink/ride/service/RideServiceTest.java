@@ -1,5 +1,7 @@
 package com.ridelink.ride.service;
 
+import com.ridelink.ride.client.DriverServiceClient;
+import com.ridelink.ride.exception.RideNotFoundException;
 import com.ridelink.ride.model.Ride;
 import com.ridelink.ride.model.RideStatus;
 import com.ridelink.ride.repository.RideRepository;
@@ -22,6 +24,9 @@ class RideServiceTest {
     @Mock
     private RideRepository rideRepository;
 
+    @Mock
+    private DriverServiceClient driverServiceClient;
+
     @InjectMocks
     private RideService rideService;
 
@@ -42,12 +47,11 @@ class RideServiceTest {
         assertNull(result.getDriverId());
         assertEquals(RideStatus.REQUESTED, result.getStatus());
 
-        verify(rideRepository, times(1))
-                .save(ride);
+        verify(rideRepository, times(1)).save(ride);
     }
 
     @Test
-    void assignDriver_shouldAssignDriverToRequestedRide() {
+    void assignDriver_shouldAssignAvailableDriverToRequestedRide() {
 
         Ride ride = createRide(
                 "ride001",
@@ -56,6 +60,9 @@ class RideServiceTest {
 
         when(rideRepository.findById("ride001"))
                 .thenReturn(Optional.of(ride));
+
+        when(driverServiceClient.isDriverAvailable("DRIVER001"))
+                .thenReturn(true);
 
         when(rideRepository.save(ride))
                 .thenReturn(ride);
@@ -68,7 +75,46 @@ class RideServiceTest {
         assertEquals("DRIVER001", result.getDriverId());
         assertEquals(RideStatus.ASSIGNED, result.getStatus());
 
-        verify(rideRepository).save(ride);
+        verify(driverServiceClient)
+                .isDriverAvailable("DRIVER001");
+
+        verify(rideRepository)
+                .save(ride);
+    }
+
+    @Test
+    void assignDriver_shouldRejectUnavailableDriver() {
+
+        Ride ride = createRide(
+                "ride001",
+                RideStatus.REQUESTED
+        );
+
+        when(rideRepository.findById("ride001"))
+                .thenReturn(Optional.of(ride));
+
+        when(driverServiceClient.isDriverAvailable("DRIVER001"))
+                .thenReturn(false);
+
+        IllegalStateException exception =
+                assertThrows(
+                        IllegalStateException.class,
+                        () -> rideService.assignDriver(
+                                "ride001",
+                                "DRIVER001"
+                        )
+                );
+
+        assertEquals(
+                "Driver is not available",
+                exception.getMessage()
+        );
+
+        verify(driverServiceClient)
+                .isDriverAvailable("DRIVER001");
+
+        verify(rideRepository, never())
+                .save(any());
     }
 
     @Test
@@ -95,6 +141,9 @@ class RideServiceTest {
                 "Driver can only be assigned to a REQUESTED ride",
                 exception.getMessage()
         );
+
+        verify(driverServiceClient, never())
+                .isDriverAvailable(anyString());
 
         verify(rideRepository, never())
                 .save(any());
@@ -304,6 +353,18 @@ class RideServiceTest {
 
         verify(rideRepository, never())
                 .save(any());
+    }
+
+    @Test
+    void getRideById_shouldThrowExceptionWhenRideDoesNotExist() {
+
+        when(rideRepository.findById("missingRide"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RideNotFoundException.class,
+                () -> rideService.getRideById("missingRide")
+        );
     }
 
     private Ride createRide(

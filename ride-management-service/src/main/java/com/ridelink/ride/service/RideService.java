@@ -1,5 +1,6 @@
 package com.ridelink.ride.service;
 
+import com.ridelink.ride.client.DriverServiceClient;
 import com.ridelink.ride.exception.RideNotFoundException;
 import com.ridelink.ride.model.Ride;
 import com.ridelink.ride.model.RideStatus;
@@ -13,12 +14,16 @@ import java.util.List;
 public class RideService {
 
     private final RideRepository rideRepository;
+    private final DriverServiceClient driverServiceClient;
 
-    public RideService(RideRepository rideRepository) {
+    public RideService(
+            RideRepository rideRepository,
+            DriverServiceClient driverServiceClient) {
+
         this.rideRepository = rideRepository;
+        this.driverServiceClient = driverServiceClient;
     }
 
-    // Create a new ride
     public Ride createRide(Ride ride) {
 
         ride.setId(null);
@@ -28,24 +33,23 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
-    // Get a ride by ID
     public Ride getRideById(String id) {
 
         return rideRepository.findById(id)
-                .orElseThrow(() ->
-                        new RideNotFoundException(
+                .orElseThrow(
+                        () -> new RideNotFoundException(
                                 "Ride not found with id: " + id
                         )
                 );
     }
 
-    // Get all rides
     public List<Ride> getAllRides() {
         return rideRepository.findAll();
     }
 
-    // Assign a driver to a ride
-    public Ride assignDriver(String id, String driverId) {
+    public Ride assignDriver(
+            String id,
+            String driverId) {
 
         Ride ride = getRideById(id);
 
@@ -61,13 +65,21 @@ public class RideService {
             );
         }
 
+        boolean available =
+                driverServiceClient.isDriverAvailable(driverId);
+
+        if (!available) {
+            throw new IllegalStateException(
+                    "Driver is not available"
+            );
+        }
+
         ride.setDriverId(driverId);
         ride.setStatus(RideStatus.ASSIGNED);
 
         return rideRepository.save(ride);
     }
 
-    // Driver accepts the ride
     public Ride acceptRide(String id) {
 
         Ride ride = getRideById(id);
@@ -83,7 +95,6 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
-    // Start the ride
     public Ride startRide(String id) {
 
         Ride ride = getRideById(id);
@@ -99,7 +110,6 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
-    // Complete the ride
     public Ride completeRide(
             String id,
             Double distanceKm,
@@ -132,7 +142,6 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
-    // Cancel the ride
     public Ride cancelRide(String id) {
 
         Ride ride = getRideById(id);
