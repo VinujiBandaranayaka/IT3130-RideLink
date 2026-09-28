@@ -1,0 +1,422 @@
+{
+    "info":  {
+                 "_postman_id":  "ridelink-ride-management",
+                 "name":  "RideLink - Ride Management Service",
+                 "description":  "Postman collection for Member 3 - Ride Management Service",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+             },
+    "variable":  [
+                     {
+                         "key":  "accountBaseUrl",
+                         "value":  "http://localhost:8081"
+                     },
+                     {
+                         "key":  "driverBaseUrl",
+                         "value":  "http://localhost:8082"
+                     },
+                     {
+                         "key":  "rideBaseUrl",
+                         "value":  "http://localhost:8083"
+                     },
+                     {
+                         "key":  "passengerEmail",
+                         "value":  "jwttest@gmail.com"
+                     },
+                     {
+                         "key":  "passengerPassword",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "adminEmail",
+                         "value":  "rideadmin@test.com"
+                     },
+                     {
+                         "key":  "adminPassword",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "driverEmail",
+                         "value":  "ridedriver@test.com"
+                     },
+                     {
+                         "key":  "driverPassword",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "passengerToken",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "adminToken",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "driverToken",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "rideId",
+                         "value":  ""
+                     },
+                     {
+                         "key":  "driverId",
+                         "value":  ""
+                     }
+                 ],
+    "item":  [
+                 {
+                     "name":  "Authentication",
+                     "item":  [
+                                  {
+                                      "name":  "Passenger Login",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{passengerEmail}}\",\n  \"password\": \"{{passengerPassword}}\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{accountBaseUrl}}/api/accounts/login",
+                                                                  "host":  [
+                                                                               "{{accountBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "accounts",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "    const json = pm.response.json();",
+                                                                                    "    pm.collectionVariables.set(\u0027passengerToken\u0027, json.token);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Admin Login",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{accountBaseUrl}}/api/accounts/login",
+                                                                  "host":  [
+                                                                               "{{accountBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "accounts",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "    const json = pm.response.json();",
+                                                                                    "    pm.collectionVariables.set(\u0027adminToken\u0027, json.token);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Driver Login",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{driverEmail}}\",\n  \"password\": \"{{driverPassword}}\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{accountBaseUrl}}/api/accounts/login",
+                                                                  "host":  [
+                                                                               "{{accountBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "accounts",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 200) {",
+                                                                                    "    const json = pm.response.json();",
+                                                                                    "    pm.collectionVariables.set(\u0027driverToken\u0027, json.token);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "Ride Management",
+                     "item":  [
+                                  {
+                                      "name":  "Create Ride",
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{passengerToken}}"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"passengerId\": \"USER001\",\n  \"pickup\": \"Malabe\",\n  \"destination\": \"Colombo\"\n}"
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{rideBaseUrl}}/api/rides",
+                                                                  "host":  [
+                                                                               "{{rideBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "rides"
+                                                                           ]
+                                                              }
+                                                  },
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "exec":  [
+                                                                                    "if (pm.response.code === 201) {",
+                                                                                    "    const json = pm.response.json();",
+                                                                                    "    pm.collectionVariables.set(\u0027rideId\u0027, json.id);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ]
+                                  },
+                                  {
+                                      "name":  "Get All Rides",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{passengerToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{rideBaseUrl}}/api/rides",
+                                                                  "host":  [
+                                                                               "{{rideBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "rides"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Get Ride By ID",
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{passengerToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{rideBaseUrl}}/api/rides/{{rideId}}",
+                                                                  "host":  [
+                                                                               "{{rideBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "rides",
+                                                                               "{{rideId}}"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Assign Driver",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{adminToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{rideBaseUrl}}/api/rides/{{rideId}}/assign?driverId={{driverId}}",
+                                                                  "host":  [
+                                                                               "{{rideBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "rides",
+                                                                               "{{rideId}}",
+                                                                               "assign"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "driverId",
+                                                                                    "value":  "{{driverId}}"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Accept Ride",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{driverToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{rideBaseUrl}}/api/rides/{{rideId}}/accept",
+                                                                  "host":  [
+                                                                               "{{rideBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "rides",
+                                                                               "{{rideId}}",
+                                                                               "accept"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Start Ride",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{driverToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{rideBaseUrl}}/api/rides/{{rideId}}/start",
+                                                                  "host":  [
+                                                                               "{{rideBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "rides",
+                                                                               "{{rideId}}",
+                                                                               "start"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Complete Ride",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{driverToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{rideBaseUrl}}/api/rides/{{rideId}}/complete?distanceKm=18.5\u0026durationMin=42",
+                                                                  "host":  [
+                                                                               "{{rideBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "rides",
+                                                                               "{{rideId}}",
+                                                                               "complete"
+                                                                           ],
+                                                                  "query":  [
+                                                                                {
+                                                                                    "key":  "distanceKm",
+                                                                                    "value":  "18.5"
+                                                                                },
+                                                                                {
+                                                                                    "key":  "durationMin",
+                                                                                    "value":  "42"
+                                                                                }
+                                                                            ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "Cancel Ride",
+                                      "request":  {
+                                                      "method":  "PUT",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{passengerToken}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{rideBaseUrl}}/api/rides/{{rideId}}/cancel",
+                                                                  "host":  [
+                                                                               "{{rideBaseUrl}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "api",
+                                                                               "rides",
+                                                                               "{{rideId}}",
+                                                                               "cancel"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 }
+             ]
+}
