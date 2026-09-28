@@ -39,34 +39,33 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Account registration
-                        .requestMatchers("/api/accounts")
-                        .permitAll()
+                        // Public endpoints
+                        .requestMatchers("/api/accounts").permitAll()
+                        .requestMatchers("/api/accounts/login").permitAll()
 
-                        // Login
-                        .requestMatchers("/api/accounts/login")
-                        .permitAll()
-
-                        // Swagger / OpenAPI
+                        // Swagger
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/webjars/**"
-                        )
-                        .permitAll()
+                        ).permitAll()
 
                         // Error endpoint
-                        .requestMatchers("/error")
-                        .permitAll()
+                        .requestMatchers("/error").permitAll()
 
-                        // Admin-only endpoints
+                        // ADMIN only
+                        .requestMatchers("/api/accounts/*/status")
+                        .hasRole("ADMIN")
+
+                        .requestMatchers("/api/accounts/*/role")
+                        .hasRole("ADMIN")
+
                         .requestMatchers("/api/accounts/admin/**")
                         .hasRole("ADMIN")
 
-                        // All other endpoints require JWT
-                        .anyRequest()
-                        .authenticated()
+                        // Everything else requires authentication
+                        .anyRequest().authenticated()
                 )
 
                 .addFilterBefore(
