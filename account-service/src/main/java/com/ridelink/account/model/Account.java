@@ -1,4 +1,4 @@
- package com.ridelink.account.model;
+package com.ridelink.account.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,7 +18,13 @@ public class Account {
     public Account() {
     }
 
-    public Account(String name, String email, String password, String role, String status) {
+    public Account(
+            String name,
+            String email,
+            String password,
+            String role,
+            String status
+    ) {
         this.name = name;
         this.email = email;
         this.password = password;

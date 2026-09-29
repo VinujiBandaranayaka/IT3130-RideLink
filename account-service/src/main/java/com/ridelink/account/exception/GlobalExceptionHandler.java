@@ -12,21 +12,47 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // =========================
+    // ACCOUNT NOT FOUND
+    // =========================
     @ExceptionHandler(AccountNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleAccountNotFound(
+    public Map<String, Object> handleAccountNotFound(
             AccountNotFoundException exception
     ) {
         return Map.of(
-                "error", exception.getMessage()
+                "status", 404,
+                "error", "Not Found",
+                "message", exception.getMessage()
         );
     }
 
+
+    // =========================
+    // DUPLICATE EMAIL
+    // =========================
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, Object> handleEmailAlreadyExists(
+            EmailAlreadyExistsException exception
+    ) {
+        return Map.of(
+                "status", 409,
+                "error", "Conflict",
+                "message", exception.getMessage()
+        );
+    }
+
+
+    // =========================
+    // VALIDATION ERRORS
+    // =========================
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleValidationException(
+    public Map<String, Object> handleValidationException(
             MethodArgumentNotValidException exception
     ) {
+
         Map<String, String> errors = new HashMap<>();
 
         exception.getBindingResult()
@@ -38,16 +64,43 @@ public class GlobalExceptionHandler {
                         )
                 );
 
-        return errors;
+        return Map.of(
+                "status", 400,
+                "error", "Bad Request",
+                "message", "Validation failed",
+                "fields", errors
+        );
     }
 
-    @ExceptionHandler(RuntimeException.class)
+
+    // =========================
+    // INVALID INPUT / STATUS
+    // =========================
+    @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleRuntimeException(
+    public Map<String, Object> handleIllegalArgumentException(
+            IllegalArgumentException exception
+    ) {
+        return Map.of(
+                "status", 400,
+                "error", "Bad Request",
+                "message", exception.getMessage()
+        );
+    }
+
+
+    // =========================
+    // AUTHENTICATION ERRORS
+    // =========================
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Map<String, Object> handleRuntimeException(
             RuntimeException exception
     ) {
         return Map.of(
-                "error", exception.getMessage()
+                "status", 401,
+                "error", "Unauthorized",
+                "message", exception.getMessage()
         );
     }
 }
