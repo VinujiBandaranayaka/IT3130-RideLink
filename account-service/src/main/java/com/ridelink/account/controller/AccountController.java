@@ -45,54 +45,14 @@ public class AccountController {
         return accountService.getAccountById(id);
     }
 
-    // =========================
-    // UPDATE PROFILE
-    // =========================
-    @PutMapping("/{id}")
-    public AccountResponse updateAccount(
-            @PathVariable String id,
-            @Valid @RequestBody UpdateAccountRequest request
-    ) {
-        return accountService.updateAccount(id, request);
-    }
-
-    // =========================
-    // UPDATE ACCOUNT STATUS
-    // =========================
-    @PatchMapping("/{id}/status")
-    public AccountResponse updateStatus(
-            @PathVariable String id,
-            @Valid @RequestBody UpdateStatusRequest request
-    ) {
-        return accountService.updateStatus(id, request);
-    }
-
-    // =========================
-    // UPDATE ACCOUNT ROLE
-    // =========================
-    @PatchMapping("/{id}/role")
-    public AccountResponse updateRole(
-            @PathVariable String id,
-            @Valid @RequestBody UpdateRoleRequest request
-    ) {
-        return accountService.updateRole(id, request);
-    }
-
-    // =========================
-    // LOGIN
-    // =========================
     @PostMapping("/login")
     public LoginResponse login(
             @Valid @RequestBody LoginRequest request
     ) {
         return accountService.login(request);
     }
-
-    // =========================
-    // ADMIN TEST
-    // =========================
     @GetMapping("/admin/test")
-    public String adminTest() {
-        return "Admin access granted";
-    }
+public String adminTest() {
+    return "Admin access granted";
+}
 }
