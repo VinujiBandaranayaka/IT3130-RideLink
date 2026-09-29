@@ -49,14 +49,23 @@ public class FareController {
             )
     })
     @PostMapping("/estimate")
-    public ResponseEntity<FareResponse> estimateFare(
-            @Valid @RequestBody FareEstimateRequest request) {
+public ResponseEntity<FareResponse> estimateFare(
 
-        FareResponse response =
-                fareService.estimateFare(request);
+        @Valid @RequestBody FareEstimateRequest request,
 
-        return ResponseEntity.ok(response);
-    }
+        @RequestHeader(
+                value = "Authorization",
+                required = false
+        ) String authorizationHeader) {
+
+    FareResponse response =
+            fareService.estimateFare(
+                    request,
+                    authorizationHeader
+            );
+
+    return ResponseEntity.ok(response);
+}
 
 
     // ========================================
@@ -78,20 +87,28 @@ public class FareController {
             )
     })
     @PostMapping("/final")
-    public ResponseEntity<FareResponse> calculateFinalFare(
-            @Valid @RequestBody FinalFareRequest request) {
+public ResponseEntity<FareResponse> calculateFinalFare(
 
-        FareResponse response =
-                fareService.calculateFinalFare(request);
+        @Valid @RequestBody FinalFareRequest request,
 
-        return ResponseEntity.ok(response);
-    }
+        @RequestHeader(
+                value = "Authorization",
+                required = false
+        ) String authorizationHeader) {
+
+    FareResponse response =
+            fareService.calculateFinalFare(
+                    request,
+                    authorizationHeader
+            );
+
+    return ResponseEntity.ok(response);
+}
 
 
     // ========================================
     // 3. GET ESTIMATE BY RIDE ID
-    // ========================================
-
+    // ======================================
     @Operation(
             summary = "Get fare estimate by ride ID",
             description = "Returns the latest stored fare estimate for the specified ride."
