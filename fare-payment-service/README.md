@@ -18,3 +18,4 @@ http://localhost:8084/v3/api-docs
 your one-hour test token may have expired. In that case regenerate it with:
 .\mvnw.cmd -Dtest=JwtTestTokenGeneratorTest test
 
+$env:JWT_SECRET = "RideLinkDevSecretKey2026Member4ABC123"

@@ -1,0 +1,12 @@
+com\ridelink\ride\exception\RideNotFoundException.class
+com\ridelink\ride\model\Ride.class
+com\ridelink\ride\client\DriverServiceClient.class
+com\ridelink\ride\repository\RideRepository.class
+com\ridelink\ride\config\OpenApiConfig.class
+com\ridelink\ride\RideManagementServiceApplication.class
+com\ridelink\ride\config\SecurityConfig.class
+com\ridelink\ride\dto\DriverResponse.class
+com\ridelink\ride\exception\GlobalExceptionHandler.class
+com\ridelink\ride\model\RideStatus.class
+com\ridelink\ride\service\RideService.class
+com\ridelink\ride\controller\RideController.class

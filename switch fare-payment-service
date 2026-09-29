@@ -1,0 +1,10 @@
+[33m89ffc01[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge branch 'main' of https://github.com/VinujiBandaranayaka/IT3130-RideLink
+[33m6b0bb01[m Update README.md to clarify token generation and execution commands
+[33me6ec68a[m Add JWT token handling to payment and fare estimation tests
+[33m8938d5b[m Add authorization header support to payment processing and validate JWT in PaymentService
+[33me256f93[m Add authorization header support to fare estimation and final fare calculation endpoints
+[33m66c4550[m Enhance OpenAPI configuration and update security roles for fare estimation endpoint
+[33md4ecd69[m Fix formatting in application.properties by adding a newline at the end of the file
+[33m8fae41e[m Refactor RideClient to include authorization header in getRideById method
+[33m53f1b58[m Merge pull request #7 from VinujiBandaranayaka/feature/driver-vehicle-service
+[33m01c7caa[m[33m ([m[1;31morigin/feature/driver-vehicle-service[m[33m)[m Standardize project on Java 17
