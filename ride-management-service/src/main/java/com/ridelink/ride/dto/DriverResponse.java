@@ -3,7 +3,7 @@ package com.ridelink.ride.dto;
 public class DriverResponse {
 
     private String id;
-    private Long accountId;
+    private String accountId;
     private String name;
     private String phone;
     private String availability;
@@ -22,12 +22,12 @@ public class DriverResponse {
         this.id = id;
     }
 
-    public Long getAccountId() {
-        return accountId;
+    public String getAccountId() {
+    return accountId;
     }
 
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
+    public void setAccountId(String accountId) {
+    this.accountId = accountId;
     }
 
     public String getName() {

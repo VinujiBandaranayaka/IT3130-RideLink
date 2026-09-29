@@ -4,10 +4,14 @@ D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\mai
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\dto\LoginRequest.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\dto\LoginResponse.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\dto\RegisterRequest.java
+D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\dto\UpdateAccountRequest.java
+D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\dto\UpdateRoleRequest.java
+D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\dto\UpdateStatusRequest.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\exception\AccountNotFoundException.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\exception\EmailAlreadyExistsException.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\exception\GlobalExceptionHandler.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\model\Account.java
+D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\OpenApiConfig.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\repository\AccountRepository.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\security\JwtAuthenticationFilter.java
 D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\src\main\java\com\ridelink\account\security\JwtService.java
