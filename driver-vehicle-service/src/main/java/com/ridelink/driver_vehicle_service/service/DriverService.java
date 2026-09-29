@@ -1,9 +1,14 @@
 package com.ridelink.driver_vehicle_service.service;
 
+import com.ridelink.driver_vehicle_service.client.AccountClient;
+import com.ridelink.driver_vehicle_service.dto.AccountResponse;
 import com.ridelink.driver_vehicle_service.model.AvailabilityStatus;
 import com.ridelink.driver_vehicle_service.model.Driver;
 import com.ridelink.driver_vehicle_service.repository.DriverRepository;
 import org.springframework.stereotype.Service;
+
+import com.ridelink.driver_vehicle_service.client.AccountClient;
+import com.ridelink.driver_vehicle_service.dto.AccountResponse;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,14 +17,47 @@ import java.util.Optional;
 public class DriverService {
 
     private final DriverRepository driverRepository;
+    private final AccountClient accountClient;
 
-    public DriverService(DriverRepository driverRepository) {
+    public DriverService(DriverRepository driverRepository,AccountClient accountClient) {
         this.driverRepository = driverRepository;
+        this.accountClient = accountClient;
     }
 
     // Create driver
-    public Driver createDriver(Driver driver) {
-        return driverRepository.save(driver);
+    public Driver createDriver(
+        Driver driver,
+        String authorizationHeader) {
+
+    AccountResponse account =
+            accountClient.getAccountById(
+                    driver.getAccountId(),
+                    authorizationHeader
+            );
+
+    if (account == null) {
+        throw new IllegalArgumentException(
+                "Account not found"
+        );
+    }
+
+    if (!"DRIVER".equalsIgnoreCase(
+            account.role())) {
+
+        throw new IllegalArgumentException(
+                "Account must have DRIVER role"
+        );
+    }
+
+    if (!"ACTIVE".equalsIgnoreCase(
+            account.status())) {
+
+        throw new IllegalArgumentException(
+                "Driver account must be ACTIVE"
+        );
+    }
+
+    return driverRepository.save(driver);
     }
 
     // Get all drivers

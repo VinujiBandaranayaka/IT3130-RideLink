@@ -44,12 +44,18 @@ public class DriverController {
             )
     })
     @PostMapping
-    public ResponseEntity<Driver> createDriver(
-            @Valid @RequestBody Driver driver) {
+     public ResponseEntity<Driver> createDriver(
+        @Valid @RequestBody Driver driver,
+
+        @RequestHeader("Authorization")
+        String authorizationHeader) {
 
         return new ResponseEntity<>(
-                driverService.createDriver(driver),
-                HttpStatus.CREATED
+            driverService.createDriver(
+                    driver,
+                    authorizationHeader
+            ),
+            HttpStatus.CREATED
         );
     }
 

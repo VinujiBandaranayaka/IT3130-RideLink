@@ -5,7 +5,6 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -17,9 +16,8 @@ public class Driver {
     @Id
     private String id;
 
-    @NotNull(message = "Account ID is required")
-    @Positive(message = "Account ID must be positive")
-    private Long accountId;
+    @NotBlank(message = "Account ID is required")
+    private String accountId;
 
     @NotBlank(message = "Driver name is required")
     private String name;

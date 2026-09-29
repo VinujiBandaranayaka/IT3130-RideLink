@@ -7,7 +7,9 @@ com\ridelink\driver_vehicle_service\exception\GlobalExceptionHandler.class
 com\ridelink\driver_vehicle_service\service\DriverService.class
 com\ridelink\driver_vehicle_service\controller\VehicleController.class
 com\ridelink\driver_vehicle_service\DriverVehicleServiceApplication.class
+com\ridelink\driver_vehicle_service\dto\AccountResponse.class
 com\ridelink\driver_vehicle_service\model\Driver.class
+com\ridelink\driver_vehicle_service\client\AccountClient.class
 com\ridelink\driver_vehicle_service\exception\ResourceNotFoundException.class
 com\ridelink\driver_vehicle_service\config\OpenApiConfig.class
 com\ridelink\driver_vehicle_service\controller\DriverController.class
