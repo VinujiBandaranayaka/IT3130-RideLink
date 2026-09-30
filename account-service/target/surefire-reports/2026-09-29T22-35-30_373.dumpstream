@@ -1,0 +1,5 @@
+# Created at 2026-09-29T22:35:30.551
+Boot Manifest-JAR contains absolute paths in classpath 'D:\OneDrive\Desktop\fare-payment-service\IT3130-RideLink\account-service\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+
