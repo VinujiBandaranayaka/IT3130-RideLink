@@ -1,6 +1,7 @@
 package com.ridelink.account.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -15,6 +16,7 @@ public class GlobalExceptionHandler {
     // =========================
     // ACCOUNT NOT FOUND
     // =========================
+
     @ExceptionHandler(AccountNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, Object> handleAccountNotFound(
@@ -27,10 +29,10 @@ public class GlobalExceptionHandler {
         );
     }
 
-
     // =========================
     // DUPLICATE EMAIL
     // =========================
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, Object> handleEmailAlreadyExists(
@@ -43,10 +45,10 @@ public class GlobalExceptionHandler {
         );
     }
 
-
     // =========================
     // VALIDATION ERRORS
     // =========================
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, Object> handleValidationException(
@@ -72,10 +74,10 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // =========================
+    // INVALID INPUT
+    // =========================
 
-    // =========================
-    // INVALID INPUT / STATUS
-    // =========================
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, Object> handleIllegalArgumentException(
@@ -88,10 +90,26 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // =========================
+    // FORBIDDEN
+    // =========================
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Map<String, Object> handleAccessDeniedException(
+            AccessDeniedException exception
+    ) {
+        return Map.of(
+                "status", 403,
+                "error", "Forbidden",
+                "message", exception.getMessage()
+        );
+    }
 
     // =========================
     // AUTHENTICATION ERRORS
     // =========================
+
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Map<String, Object> handleRuntimeException(
