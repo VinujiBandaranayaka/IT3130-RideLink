@@ -116,8 +116,22 @@ public class SecurityConfig {
     @Bean
     public JwtDecoder jwtDecoder() {
 
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET environment variable is required"
+            );
+        }
+
+        byte[] secretBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+
+        if (secretBytes.length < 48) {
+            throw new IllegalStateException(
+                    "JWT secret must be at least 48 bytes (384 bits) for HS384"
+            );
+        }
+
         SecretKey secretKey = new SecretKeySpec(
-                jwtSecret.getBytes(StandardCharsets.UTF_8),
+                secretBytes,
                 "HmacSHA384"
         );
 

@@ -8,6 +8,8 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class JwtTestTokenGeneratorTest {
 
     @Test
@@ -41,12 +43,13 @@ class JwtTestTokenGeneratorTest {
                         .signWith(key)
                         .compact();
 
-        System.out.println();
-        System.out.println("==============================");
-        System.out.println("LOCAL PASSENGER JWT");
-        System.out.println("==============================");
-        System.out.println(token);
-        System.out.println("==============================");
-        System.out.println();
+        var claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        assertEquals("USER001", claims.getSubject());
+        assertEquals("PASSENGER", claims.get("role", String.class));
     }
 }
