@@ -19,13 +19,17 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-
 @ExtendWith(MockitoExtension.class)
 class DriverServiceTest {
 
     private static final String TEST_TOKEN =
             "Bearer test-token";
 
+    private static final String TEST_EMAIL =
+            "driver@gmail.com";
+
+    private static final String TEST_ACCOUNT_ID =
+            "68da1234abcd5678ef901234";
 
     // =========================================
     // MOCKS
@@ -37,13 +41,8 @@ class DriverServiceTest {
     @Mock
     private AccountClient accountClient;
 
-
-    // Mockito injects:
-    // DriverRepository + AccountClient
-    // into DriverService
     @InjectMocks
     private DriverService driverService;
-
 
     // =========================================
     // 1. CREATE DRIVER
@@ -54,66 +53,40 @@ class DriverServiceTest {
 
         Driver driver = new Driver();
 
-        driver.setAccountId(
-                "68da1234abcd5678ef901234"
-        );
-
+        driver.setAccountId(TEST_ACCOUNT_ID);
         driver.setName("Test Driver");
-
         driver.setPhone("0712345678");
-
         driver.setAvailability(
                 AvailabilityStatus.AVAILABLE
         );
-
         driver.setServiceArea("Colombo");
-
-
-        // -------------------------------------
-        // Mock Account Service response
-        // -------------------------------------
 
         AccountResponse account =
                 new AccountResponse(
-                        "68da1234abcd5678ef901234",
+                        TEST_ACCOUNT_ID,
                         "Test Driver",
-                        "driver@gmail.com",
+                        TEST_EMAIL,
                         "DRIVER",
                         "ACTIVE"
                 );
 
-
         when(
                 accountClient.getAccountById(
-                        "68da1234abcd5678ef901234",
+                        TEST_ACCOUNT_ID,
                         TEST_TOKEN
                 )
         ).thenReturn(account);
-
-
-        // -------------------------------------
-        // Mock Driver Repository
-        // -------------------------------------
 
         when(
                 driverRepository.save(driver)
         ).thenReturn(driver);
 
-
-        // -------------------------------------
-        // Execute
-        // -------------------------------------
-
         Driver result =
                 driverService.createDriver(
                         driver,
-                        TEST_TOKEN
+                        TEST_TOKEN,
+                        TEST_EMAIL
                 );
-
-
-        // -------------------------------------
-        // Assertions
-        // -------------------------------------
 
         assertNotNull(result);
 
@@ -123,33 +96,64 @@ class DriverServiceTest {
         );
 
         assertEquals(
-                "68da1234abcd5678ef901234",
+                TEST_ACCOUNT_ID,
                 result.getAccountId()
         );
 
-
-        // -------------------------------------
-        // Verify Account Service was checked
-        // -------------------------------------
-
         verify(accountClient)
                 .getAccountById(
-                        "68da1234abcd5678ef901234",
+                        TEST_ACCOUNT_ID,
                         TEST_TOKEN
                 );
-
-
-        // -------------------------------------
-        // Verify Driver was saved
-        // -------------------------------------
 
         verify(driverRepository)
                 .save(driver);
     }
 
+    // =========================================
+    // 2. CREATE DRIVER - WRONG OWNER
+    // =========================================
+
+    @Test
+    void createDriver_shouldRejectWrongOwner() {
+
+        Driver driver = new Driver();
+
+        driver.setAccountId(TEST_ACCOUNT_ID);
+
+        AccountResponse account =
+                new AccountResponse(
+                        TEST_ACCOUNT_ID,
+                        "Test Driver",
+                        TEST_EMAIL,
+                        "DRIVER",
+                        "ACTIVE"
+                );
+
+        when(
+                accountClient.getAccountById(
+                        TEST_ACCOUNT_ID,
+                        TEST_TOKEN
+                )
+        ).thenReturn(account);
+
+        assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
+                () -> driverService.createDriver(
+                        driver,
+                        TEST_TOKEN,
+                        "another@gmail.com"
+                )
+        );
+
+        verify(
+                driverRepository,
+                never()
+        ).save(any());
+    }
 
     // =========================================
-    // 2. GET DRIVER BY ID
+    // 3. GET DRIVER BY ID
     // =========================================
 
     @Test
@@ -159,7 +163,6 @@ class DriverServiceTest {
 
         driver.setName("Test Driver");
 
-
         when(
                 driverRepository.findById(
                         "driver123"
@@ -168,32 +171,24 @@ class DriverServiceTest {
                 Optional.of(driver)
         );
 
-
         Optional<Driver> result =
                 driverService.getDriverById(
                         "driver123"
                 );
 
-
-        assertTrue(
-                result.isPresent()
-        );
+        assertTrue(result.isPresent());
 
         assertEquals(
                 "Test Driver",
                 result.get().getName()
         );
 
-
         verify(driverRepository)
-                .findById(
-                        "driver123"
-                );
+                .findById("driver123");
     }
 
-
     // =========================================
-    // 3. UPDATE AVAILABILITY
+    // 4. UPDATE AVAILABILITY
     // =========================================
 
     @Test
@@ -201,12 +196,20 @@ class DriverServiceTest {
 
         Driver driver = new Driver();
 
+        driver.setAccountId(TEST_ACCOUNT_ID);
         driver.setName("Test Driver");
-
         driver.setAvailability(
                 AvailabilityStatus.AVAILABLE
         );
 
+        AccountResponse account =
+                new AccountResponse(
+                        TEST_ACCOUNT_ID,
+                        "Test Driver",
+                        TEST_EMAIL,
+                        "DRIVER",
+                        "ACTIVE"
+                );
 
         when(
                 driverRepository.findById(
@@ -216,37 +219,44 @@ class DriverServiceTest {
                 Optional.of(driver)
         );
 
+        when(
+                accountClient.getAccountById(
+                        TEST_ACCOUNT_ID,
+                        TEST_TOKEN
+                )
+        ).thenReturn(account);
 
         when(
                 driverRepository.save(driver)
         ).thenReturn(driver);
 
-
         Optional<Driver> result =
                 driverService.updateAvailability(
                         "driver123",
-                        AvailabilityStatus.ON_TRIP
+                        AvailabilityStatus.ON_TRIP,
+                        TEST_TOKEN,
+                        TEST_EMAIL
                 );
 
-
-        assertTrue(
-                result.isPresent()
-        );
-
+        assertTrue(result.isPresent());
 
         assertEquals(
                 AvailabilityStatus.ON_TRIP,
                 result.get().getAvailability()
         );
 
+        verify(accountClient)
+                .getAccountById(
+                        TEST_ACCOUNT_ID,
+                        TEST_TOKEN
+                );
 
         verify(driverRepository)
                 .save(driver);
     }
 
-
     // =========================================
-    // 4. GET AVAILABLE DRIVERS
+    // 5. GET AVAILABLE DRIVERS
     // =========================================
 
     @Test
@@ -254,14 +264,11 @@ class DriverServiceTest {
 
         Driver driver = new Driver();
 
-        driver.setName(
-                "Available Driver"
-        );
+        driver.setName("Available Driver");
 
         driver.setAvailability(
                 AvailabilityStatus.AVAILABLE
         );
-
 
         when(
                 driverRepository.findByAvailability(
@@ -271,23 +278,18 @@ class DriverServiceTest {
                 List.of(driver)
         );
 
-
         List<Driver> result =
                 driverService.getAvailableDrivers();
-
 
         assertEquals(
                 1,
                 result.size()
         );
 
-
         assertEquals(
                 AvailabilityStatus.AVAILABLE,
-                result.get(0)
-                        .getAvailability()
+                result.get(0).getAvailability()
         );
-
 
         verify(driverRepository)
                 .findByAvailability(
@@ -295,9 +297,8 @@ class DriverServiceTest {
                 );
     }
 
-
     // =========================================
-    // 5. UPDATE NON-EXISTING DRIVER
+    // 6. UPDATE DRIVER - NON EXISTING
     // =========================================
 
     @Test
@@ -311,26 +312,20 @@ class DriverServiceTest {
                 Optional.empty()
         );
 
-
-        Driver driver =
-                new Driver();
-
+        Driver driver = new Driver();
 
         Driver result =
                 driverService.updateDriver(
                         "invalid-id",
-                        driver
+                        driver,
+                        TEST_TOKEN,
+                        TEST_EMAIL
                 );
-
 
         assertNull(result);
 
-
         verify(driverRepository)
-                .findById(
-                        "invalid-id"
-                );
-
+                .findById("invalid-id");
 
         verify(
                 driverRepository,
@@ -338,9 +333,146 @@ class DriverServiceTest {
         ).save(any());
     }
 
+    // =========================================
+    // 7. UPDATE DRIVER - OWN PROFILE
+    // =========================================
+
+    @Test
+    void updateDriver_shouldAllowOwner() {
+
+        Driver existingDriver = new Driver();
+
+        existingDriver.setAccountId(TEST_ACCOUNT_ID);
+        existingDriver.setName("Old Name");
+        existingDriver.setPhone("0711111111");
+
+        Driver updatedDriver = new Driver();
+
+        updatedDriver.setAccountId(
+                "another-account-id"
+        );
+        updatedDriver.setName("New Name");
+        updatedDriver.setPhone("0722222222");
+        updatedDriver.setAvailability(
+                AvailabilityStatus.AVAILABLE
+        );
+        updatedDriver.setServiceArea("Colombo");
+        updatedDriver.setCurrentLatitude(6.9271);
+        updatedDriver.setCurrentLongitude(79.8612);
+
+        AccountResponse account =
+                new AccountResponse(
+                        TEST_ACCOUNT_ID,
+                        "Test Driver",
+                        TEST_EMAIL,
+                        "DRIVER",
+                        "ACTIVE"
+                );
+
+        when(
+                driverRepository.findById(
+                        "driver123"
+                )
+        ).thenReturn(
+                Optional.of(existingDriver)
+        );
+
+        when(
+                accountClient.getAccountById(
+                        TEST_ACCOUNT_ID,
+                        TEST_TOKEN
+                )
+        ).thenReturn(account);
+
+        when(
+                driverRepository.save(existingDriver)
+        ).thenReturn(existingDriver);
+
+        Driver result =
+                driverService.updateDriver(
+                        "driver123",
+                        updatedDriver,
+                        TEST_TOKEN,
+                        TEST_EMAIL
+                );
+
+        assertNotNull(result);
+
+        assertEquals(
+                "New Name",
+                result.getName()
+        );
+
+        assertEquals(
+                "0722222222",
+                result.getPhone()
+        );
+
+        // Account ownership must not change
+        assertEquals(
+                TEST_ACCOUNT_ID,
+                result.getAccountId()
+        );
+
+        verify(driverRepository)
+                .save(existingDriver);
+    }
 
     // =========================================
-    // 6. DELETE NON-EXISTING DRIVER
+    // 8. UPDATE DRIVER - WRONG OWNER
+    // =========================================
+
+    @Test
+    void updateDriver_shouldRejectWrongOwner() {
+
+        Driver existingDriver = new Driver();
+
+        existingDriver.setAccountId(TEST_ACCOUNT_ID);
+
+        when(
+                driverRepository.findById(
+                        "driver123"
+                )
+        ).thenReturn(
+                Optional.of(existingDriver)
+        );
+
+        AccountResponse account =
+                new AccountResponse(
+                        TEST_ACCOUNT_ID,
+                        "Test Driver",
+                        TEST_EMAIL,
+                        "DRIVER",
+                        "ACTIVE"
+                );
+
+        when(
+                accountClient.getAccountById(
+                        TEST_ACCOUNT_ID,
+                        TEST_TOKEN
+                )
+        ).thenReturn(account);
+
+        Driver updatedDriver = new Driver();
+
+        assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
+                () -> driverService.updateDriver(
+                        "driver123",
+                        updatedDriver,
+                        TEST_TOKEN,
+                        "another@gmail.com"
+                )
+        );
+
+        verify(
+                driverRepository,
+                never()
+        ).save(any());
+    }
+
+    // =========================================
+    // 9. DELETE NON-EXISTING DRIVER
     // =========================================
 
     @Test
@@ -352,27 +484,19 @@ class DriverServiceTest {
                 )
         ).thenReturn(false);
 
-
         boolean result =
                 driverService.deleteDriver(
                         "invalid-id"
                 );
 
-
         assertFalse(result);
 
-
         verify(driverRepository)
-                .existsById(
-                        "invalid-id"
-                );
-
+                .existsById("invalid-id");
 
         verify(
                 driverRepository,
                 never()
-        ).deleteById(
-                "invalid-id"
-        );
+        ).deleteById("invalid-id");
     }
 }
