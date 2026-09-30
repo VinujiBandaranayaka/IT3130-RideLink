@@ -12,6 +12,8 @@ import com.ridelink.account.exception.EmailAlreadyExistsException;
 import com.ridelink.account.model.Account;
 import com.ridelink.account.repository.AccountRepository;
 import com.ridelink.account.security.JwtService;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +37,7 @@ public class AccountService {
     // =========================
     // CREATE ACCOUNT
     // =========================
+
     public AccountResponse createAccount(RegisterRequest request) {
 
         if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -48,12 +51,11 @@ public class AccountService {
         account.setName(request.getName());
         account.setEmail(request.getEmail());
 
-        // Always hash the password before saving
         account.setPassword(
                 passwordEncoder.encode(request.getPassword())
         );
 
-        // Public registration cannot create ADMIN accounts
+        // Public registration creates passenger accounts only
         account.setRole("PASSENGER");
 
         // New accounts are active by default
@@ -67,6 +69,7 @@ public class AccountService {
     // =========================
     // GET ACCOUNT
     // =========================
+
     public AccountResponse getAccountById(String id) {
 
         Account account = accountRepository.findById(id)
@@ -80,11 +83,13 @@ public class AccountService {
     }
 
     // =========================
-    // UPDATE PROFILE
+    // UPDATE OWN PROFILE
     // =========================
+
     public AccountResponse updateAccount(
             String id,
-            UpdateAccountRequest request
+            UpdateAccountRequest request,
+            Authentication authentication
     ) {
 
         Account account = accountRepository.findById(id)
@@ -94,10 +99,34 @@ public class AccountService {
                         )
                 );
 
-        // Check whether the new email already belongs to another account
-        if (!account.getEmail().equalsIgnoreCase(request.getEmail())) {
+        if (authentication == null
+                || authentication.getName() == null
+                || authentication.getName().isBlank()) {
 
-            if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new AccessDeniedException(
+                    "Authenticated user could not be identified"
+            );
+        }
+
+        // Only the account owner can update the profile
+        if (!account.getEmail().equalsIgnoreCase(
+                authentication.getName()
+        )) {
+
+            throw new AccessDeniedException(
+                    "You are not authorized to update this account"
+            );
+        }
+
+        // Prevent duplicate email
+        if (!account.getEmail().equalsIgnoreCase(
+                request.getEmail()
+        )) {
+
+            if (accountRepository
+                    .findByEmail(request.getEmail())
+                    .isPresent()) {
+
                 throw new EmailAlreadyExistsException(
                         "An account with this email already exists"
                 );
@@ -107,7 +136,8 @@ public class AccountService {
         account.setName(request.getName());
         account.setEmail(request.getEmail());
 
-        Account updatedAccount = accountRepository.save(account);
+        Account updatedAccount =
+                accountRepository.save(account);
 
         return toAccountResponse(updatedAccount);
     }
@@ -115,9 +145,11 @@ public class AccountService {
     // =========================
     // LOGIN
     // =========================
+
     public LoginResponse login(LoginRequest request) {
 
-        Account account = accountRepository.findByEmail(request.getEmail())
+        Account account = accountRepository
+                .findByEmail(request.getEmail())
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Invalid email or password"
@@ -128,12 +160,16 @@ public class AccountService {
                 request.getPassword(),
                 account.getPassword()
         )) {
+
             throw new RuntimeException(
                     "Invalid email or password"
             );
         }
 
-        if (!"ACTIVE".equalsIgnoreCase(account.getStatus())) {
+        if (!"ACTIVE".equalsIgnoreCase(
+                account.getStatus()
+        )) {
+
             throw new RuntimeException(
                     "Account is not active"
             );
@@ -154,6 +190,7 @@ public class AccountService {
     // =========================
     // UPDATE ACCOUNT STATUS
     // =========================
+
     public AccountResponse updateStatus(
             String id,
             UpdateStatusRequest request
@@ -166,7 +203,8 @@ public class AccountService {
                         )
                 );
 
-        String newStatus = request.getStatus().toUpperCase();
+        String newStatus =
+                request.getStatus().toUpperCase();
 
         if (!newStatus.equals("ACTIVE")
                 && !newStatus.equals("INACTIVE")) {
@@ -178,7 +216,8 @@ public class AccountService {
 
         account.setStatus(newStatus);
 
-        Account updatedAccount = accountRepository.save(account);
+        Account updatedAccount =
+                accountRepository.save(account);
 
         return toAccountResponse(updatedAccount);
     }
@@ -186,6 +225,7 @@ public class AccountService {
     // =========================
     // UPDATE ACCOUNT ROLE
     // =========================
+
     public AccountResponse updateRole(
             String id,
             UpdateRoleRequest request
@@ -198,7 +238,8 @@ public class AccountService {
                         )
                 );
 
-        String newRole = request.getRole().toUpperCase();
+        String newRole =
+                request.getRole().toUpperCase();
 
         if (!newRole.equals("PASSENGER")
                 && !newRole.equals("DRIVER")
@@ -211,7 +252,8 @@ public class AccountService {
 
         account.setRole(newRole);
 
-        Account updatedAccount = accountRepository.save(account);
+        Account updatedAccount =
+                accountRepository.save(account);
 
         return toAccountResponse(updatedAccount);
     }
@@ -219,7 +261,10 @@ public class AccountService {
     // =========================
     // CONVERT ACCOUNT TO RESPONSE
     // =========================
-    private AccountResponse toAccountResponse(Account account) {
+
+    private AccountResponse toAccountResponse(
+            Account account
+    ) {
 
         return new AccountResponse(
                 account.getId(),

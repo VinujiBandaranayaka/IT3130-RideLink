@@ -1,5 +1,7 @@
 package com.ridelink.account.security;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -53,6 +55,18 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
+                        )
+                )
+
+                // Unauthenticated requests to protected endpoints
+                // must return 401 Unauthorized instead of 403.
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response,
+                                                  authException) ->
+                                response.sendError(
+                                        HttpServletResponse.SC_UNAUTHORIZED,
+                                        "Unauthorized"
+                                )
                         )
                 )
 
