@@ -1,4 +1,4 @@
-name: Fare Payment Service CI
+name: Account Service CI
 
 on:
   push:
@@ -6,17 +6,15 @@ on:
   workflow_dispatch:
 
 jobs:
-
-  build-and-test:
-
+  test:
+    name: Build and test Account Service
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: fare-payment-service
+        working-directory: account-service
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -26,13 +24,10 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-          cache-dependency-path: fare-payment-service/pom.xml
+          cache-dependency-path: account-service/pom.xml
 
       - name: Make Maven wrapper executable
         run: chmod +x mvnw
 
       - name: Run Maven tests
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: ./mvnw -B clean test

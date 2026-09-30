@@ -1,10 +1,12 @@
 package com.ridelink.ride.client;
 
 import com.ridelink.ride.dto.DriverResponse;
+import com.ridelink.ride.exception.DriverServiceUnavailableException;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 @Component
@@ -31,8 +33,19 @@ public class DriverServiceClient {
 
         } catch (RestClientResponseException exception) {
 
+            if (exception.getStatusCode().value() >= 500) {
+                throw new DriverServiceUnavailableException(
+                        "Driver service is unavailable"
+                );
+            }
+
             throw new IllegalArgumentException(
                     "Driver not found with id: " + driverId
+            );
+        } catch (RestClientException exception) {
+
+            throw new DriverServiceUnavailableException(
+                    "Driver service is unavailable"
             );
         }
     }
