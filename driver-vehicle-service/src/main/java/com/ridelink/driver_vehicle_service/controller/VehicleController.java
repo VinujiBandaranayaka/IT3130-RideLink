@@ -2,10 +2,11 @@ package com.ridelink.driver_vehicle_service.controller;
 
 import com.ridelink.driver_vehicle_service.model.Vehicle;
 import com.ridelink.driver_vehicle_service.service.VehicleService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/drivers/{driverId}/vehicle")
@@ -17,45 +18,83 @@ public class VehicleController {
         this.vehicleService = vehicleService;
     }
 
-    // Create vehicle
+    // =========================================================
+    // CREATE VEHICLE
+    // =========================================================
+
     @PostMapping
     public ResponseEntity<Vehicle> createVehicle(
             @PathVariable String driverId,
-            @Valid @RequestBody Vehicle vehicle) {
+            @Valid @RequestBody Vehicle vehicle,
+            @RequestHeader("Authorization") String authorizationHeader,
+            Authentication authentication) {
 
         return new ResponseEntity<>(
-                vehicleService.createVehicle(driverId, vehicle),
+                vehicleService.createVehicle(
+                        driverId,
+                        vehicle,
+                        authorizationHeader,
+                        authentication
+                ),
                 HttpStatus.CREATED
         );
     }
 
-    // Get vehicle
+    // =========================================================
+    // GET VEHICLE
+    // =========================================================
+
+    /*
+     * GET remains available for Ride Service/read integration
+     * according to the current SecurityConfig.
+     */
     @GetMapping
     public ResponseEntity<Vehicle> getVehicle(
             @PathVariable String driverId) {
 
-        return vehicleService.getVehicleByDriverId(driverId)
+        return vehicleService
+                .getVehicleByDriverId(driverId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Update vehicle
+    // =========================================================
+    // UPDATE VEHICLE
+    // =========================================================
+
     @PutMapping
     public ResponseEntity<Vehicle> updateVehicle(
             @PathVariable String driverId,
-            @Valid @RequestBody Vehicle vehicle) {
+            @Valid @RequestBody Vehicle vehicle,
+            @RequestHeader("Authorization") String authorizationHeader,
+            Authentication authentication) {
 
-        return vehicleService.updateVehicle(driverId, vehicle)
+        return vehicleService
+                .updateVehicle(
+                        driverId,
+                        vehicle,
+                        authorizationHeader,
+                        authentication
+                )
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Delete vehicle
+    // =========================================================
+    // DELETE VEHICLE
+    // =========================================================
+
     @DeleteMapping
     public ResponseEntity<Void> deleteVehicle(
-            @PathVariable String driverId) {
+            @PathVariable String driverId,
+            @RequestHeader("Authorization") String authorizationHeader,
+            Authentication authentication) {
 
-        if (vehicleService.deleteVehicle(driverId)) {
+        if (vehicleService.deleteVehicle(
+                driverId,
+                authorizationHeader,
+                authentication)) {
+
             return ResponseEntity.noContent().build();
         }
 

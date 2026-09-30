@@ -12,6 +12,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,21 +42,25 @@ public class DriverController {
             @ApiResponse(
                     responseCode = "400",
                     description = "Invalid driver data"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Authenticated account cannot create this driver"
             )
     })
     @PostMapping
-     public ResponseEntity<Driver> createDriver(
-        @Valid @RequestBody Driver driver,
-
-        @RequestHeader("Authorization")
-        String authorizationHeader) {
+    public ResponseEntity<Driver> createDriver(
+            @Valid @RequestBody Driver driver,
+            @RequestHeader("Authorization") String authorizationHeader,
+            Authentication authentication) {
 
         return new ResponseEntity<>(
-            driverService.createDriver(
-                    driver,
-                    authorizationHeader
-            ),
-            HttpStatus.CREATED
+                driverService.createDriver(
+                        driver,
+                        authorizationHeader,
+                        authentication.getName()
+                ),
+                HttpStatus.CREATED
         );
     }
 
@@ -95,10 +100,17 @@ public class DriverController {
     @PutMapping("/{id}")
     public ResponseEntity<Driver> updateDriver(
             @PathVariable String id,
-            @Valid @RequestBody Driver driver) {
+            @Valid @RequestBody Driver driver,
+            @RequestHeader("Authorization") String authorizationHeader,
+            Authentication authentication) {
 
         Driver updatedDriver =
-                driverService.updateDriver(id, driver);
+                driverService.updateDriver(
+                        id,
+                        driver,
+                        authorizationHeader,
+                        authentication.getName()
+                );
 
         if (updatedDriver == null) {
             return ResponseEntity.notFound().build();
@@ -123,11 +135,15 @@ public class DriverController {
     @PatchMapping("/{id}/availability")
     public ResponseEntity<Driver> updateAvailability(
             @PathVariable String id,
-            @RequestParam AvailabilityStatus availability) {
+            @RequestParam AvailabilityStatus availability,
+            @RequestHeader("Authorization") String authorizationHeader,
+            Authentication authentication) {
 
         return driverService.updateAvailability(
                         id,
-                        availability
+                        availability,
+                        authorizationHeader,
+                        authentication.getName()
                 )
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -160,12 +176,17 @@ public class DriverController {
                     value = "180.0",
                     message = "Longitude must be between -180 and 180"
             )
-            Double longitude) {
+            Double longitude,
+
+            @RequestHeader("Authorization") String authorizationHeader,
+            Authentication authentication) {
 
         return driverService.updateLocation(
                         id,
                         latitude,
-                        longitude
+                        longitude,
+                        authorizationHeader,
+                        authentication.getName()
                 )
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -185,9 +206,7 @@ public class DriverController {
             @PathVariable String serviceArea) {
 
         return ResponseEntity.ok(
-                driverService.getAvailableDriversByArea(
-                        serviceArea
-                )
+                driverService.getAvailableDriversByArea(serviceArea)
         );
     }
 }
