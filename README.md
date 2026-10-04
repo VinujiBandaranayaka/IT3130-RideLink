@@ -1,249 +1,326 @@
-# IT3130-RideLink
-IT3130 Application Development - RideLink Group Assignment
+﻿# RideLink
 
-# RideLink ΓÇô Backend Microservices
+RideLink is a Java-based microservices backend for a ride-sharing platform developed as part of the IT3130 Application Development group project. The system is designed around clear service boundaries, with each microservice responsible for a distinct domain such as identity, driver management, ride orchestration, or fare and payment processing.
 
-RideLink is a backend microservices-based ride-sharing platform developed for the IT3130 ΓÇô Application Development group assignment.
+The project demonstrates modern backend service design using Spring Boot, MongoDB, JWT-based authentication, REST APIs, Swagger/OpenAPI documentation, and inter-service communication in a realistic distributed architecture.
 
-The system is implemented using Java and Spring Boot. The application is divided into four independently executable microservices, with each service responsible for a specific business capability and its own data store.
+## Overview
 
----
+RideLink simulates a complete ride-hailing flow, covering:
 
-## 1. Project Overview
+- User and driver account management
+- Authentication and role-based authorization
+- Driver and vehicle registration
+- Availability and location tracking
+- Ride creation, assignment, lifecycle management, and cancellation
+- Fare estimation and final fare calculation
+- Simulated payment processing with receipts
+- Service-to-service API integration
+- API testing with Postman and Swagger
 
-RideLink provides backend services for a simulated ride-sharing platform.
+## System Architecture
 
-The system supports:
+RideLink follows a microservices architecture, where each service runs independently and manages its own data domain.
 
-- Passenger and driver account management
-- Driver and vehicle management
-- Ride request and ride lifecycle management
-- Fare calculation and simulated payment processing
-- Authentication and role-based access control
-- Inter-service communication through REST APIs
-- API testing using Postman
-- API documentation using Swagger/OpenAPI
-
----
-
-## 2. System Architecture
-
-RideLink follows a microservices architecture.
-
-Each microservice:
-
-- Runs independently
-- Has its own business responsibility
-- Maintains its own persistence boundary
-- Exposes REST APIs
-- Communicates with other services through APIs where required
-
-### Microservices
-
-| Service | Responsibility | Port | Database |
+| Service | Responsibility | Port | Persistence |
 |---|---|---:|---|
-| Account Service | Account registration, login, roles, profiles and account status | 8081 | account_db |
-| Driver & Vehicle Service | Driver profiles, vehicles, availability, service area and location | 8082 | driver_vehicle_db |
-| Ride Management Service | Ride requests, driver assignment and ride lifecycle | 8083 | ride_management_db |
-| Fare & Payment Service | Fare estimation, final fare and simulated payment | 8084 | fare_payment_db |
+| [account-service](./account-service) | Account creation, login, JWT issuance, roles, profile and status management | 8081 | MongoDB |
+| [driver-vehicle-service](./driver-vehicle-service) | Driver profiles, vehicles, availability, location, service area logic | 8082 | MongoDB |
+| [ride-management-service](./ride-management-service) | Ride requests, assignment, lifecycle tracking, authorization checks | 8083 | MongoDB |
+| [fare-payment-service](./fare-payment-service) | Fare estimation, final fare calculation, payments, receipts | 8084 | MongoDB |
 
----
+### Typical request flow
 
-## 3. Microservices
+1. A user registers or logs in through the Account Service.
+2. Drivers are created and maintained in the Driver & Vehicle Service.
+3. Passengers create rides through the Ride Management Service.
+4. The ride service validates the driver, updates lifecycle status, and enforces authorization rules.
+5. Fare calculations are completed in the Fare & Payment Service.
+6. Payment processing and receipt generation complete the transaction flow.
 
-### 3.1 Account Service
+## Tech Stack
 
-The Account Service manages passenger and driver accounts.
+- Java 17
+- Spring Boot
+- Spring Web / REST APIs
+- Spring Security
+- JWT authentication
+- MongoDB
+- Maven
+- OpenAPI / Swagger UI
+- Postman for API testing
 
-Main responsibilities:
-
-- Passenger registration
-- Driver registration
-- Login and token issuance
-- Role management
-- Profile management
-- Account status management
-
-Current implemented endpoints:
+## Repository Structure
 
 ```text
+IT3130-RideLink/
+├── account-service/
+│   ├── src/
+│   ├── pom.xml
+│   └── mvnw
+├── driver-vehicle-service/
+│   ├── src/
+│   ├── pom.xml
+│   └── mvnw
+├── ride-management-service/
+│   ├── src/
+│   ├── pom.xml
+│   └── mvnw
+├── fare-payment-service/
+│   ├── src/
+│   ├── pom.xml
+│   └── mvnw
+├── postman/
+│   ├── RideLink-Complete.postman_collection.json
+│   ├── RideLink-Local.postman_environment.json
+│   └── RideLink-Ride-Management.postman_collection.json
+├── login-test.json
+├── .gitignore
+├── README.md
+└── .github/
+```
+
+## Service Details
+
+### 1) Account Service
+
+The Account Service manages all identity and access concerns.
+
+Features:
+
+- User registration and login
+- JWT token generation
+- Role-based access restrictions
+- Account updates and status control
+- Account retrieval by ID
+
+Key endpoint group:
+
+```http
 POST /api/accounts
+POST /api/accounts/login
 GET  /api/accounts/{id}
+PUT  /api/accounts/{id}
+PATCH /api/accounts/{id}/status
+PATCH /api/accounts/{id}/role
+```
 
----
+### 2) Driver & Vehicle Service
 
-# Member 3 - Ride Management Service
+The Driver & Vehicle Service handles everything related to drivers and their vehicles.
 
-The Ride Management Service manages ride creation, assignment, lifecycle, cancellation, and retrieval.
+Features:
 
-## Service Information
+- Driver profile creation and retrieval
+- Vehicle-related operations
+- Driver availability updates
+- Current location tracking
+- Driver lookup by service area
+- Authorization checks for driver operations
 
-- Port: 8083
-- Java: 17
-- Spring Boot: 4.1.1
-- Database: MongoDB Atlas
-- Database Name: ride_management_db
-- Branch: feature/ride-management-service
+Sample endpoint group:
 
-## Ride Lifecycle
+```http
+POST   /api/drivers
+GET    /api/drivers
+GET    /api/drivers/{id}
+PUT    /api/drivers/{id}
+DELETE /api/drivers/{id}
+PATCH  /api/drivers/{id}/availability
+PATCH  /api/drivers/{id}/location
+GET    /api/drivers/available
+GET    /api/drivers/available/{serviceArea}
+```
 
+### 3) Ride Management Service
+
+The Ride Management Service is responsible for the ride lifecycle and operational flow.
+
+Features:
+
+- Ride creation and retrieval
+- Driver assignment workflow
+- Ride state validation
+- Status transitions such as REQUESTED, ASSIGNED, ACCEPTED, IN_PROGRESS, COMPLETED, and CANCELLED
+- Driver availability enforcement
+- Role-based authorization for ride actions
+
+Common ride lifecycle:
+
+```text
 REQUESTED -> ASSIGNED -> ACCEPTED -> IN_PROGRESS -> COMPLETED
+```
 
-A ride can also move to CANCELLED. Invalid state transitions are rejected.
+A ride can also be cancelled at valid points in the workflow. Invalid transitions are rejected to maintain consistency.
 
-## API Endpoints
+Example endpoints:
 
-| Method | Endpoint | Role | Description |
-|---|---|---|---|
-| POST | /api/rides | PASSENGER | Create a new ride |
-| GET | /api/rides | PASSENGER / DRIVER / ADMIN | Get all rides |
-| GET | /api/rides/{id} | PASSENGER / DRIVER / ADMIN | Get ride by ID |
-| PUT | /api/rides/{id}/assign?driverId={driverId} | ADMIN | Assign an available driver |
-| PUT | /api/rides/{id}/accept | DRIVER | Accept an assigned ride |
-| PUT | /api/rides/{id}/start | DRIVER | Start an accepted ride |
-| PUT | /api/rides/{id}/complete?distanceKm={value}&durationMin={value} | DRIVER | Complete a ride |
-| PUT | /api/rides/{id}/cancel | PASSENGER / DRIVER / ADMIN | Cancel a ride |
+```http
+POST /api/rides
+GET  /api/rides
+GET  /api/rides/{id}
+PUT  /api/rides/{id}/assign?driverId={driverId}
+PUT  /api/rides/{id}/accept
+PUT  /api/rides/{id}/start
+PUT  /api/rides/{id}/complete?distanceKm={value}&durationMin={value}
+PUT  /api/rides/{id}/cancel
+```
 
-## Security
+### 4) Fare & Payment Service
 
-The Ride Management Service uses JWT Bearer authentication.
+The Fare & Payment Service calculates trip charges and handles simulated payment logic.
 
-Supported roles:
+Features:
 
-- PASSENGER
-- DRIVER
-- ADMIN
+- Fare estimation for ride data
+- Final fare calculation with trip details and surge logic
+- Payment simulation and status tracking
+- Receipt generation
+- Response and exception handling for invalid or failed payments
 
-Security behavior verified:
+Example endpoints:
 
-- No JWT token -> 401 Unauthorized
-- PASSENGER accessing ADMIN-only assignment endpoint -> 403 Forbidden
+```http
+POST /api/fares/estimate
+POST /api/fares/final
+GET  /api/fares/ride/{rideId}
+POST /api/payments
+GET  /api/payments/{id}
+GET  /api/payments/{id}/receipt
+```
+
+## Security Model
+
+The services are secured with JWT-based authentication and role-aware authorization. Sensitive endpoints validate the caller's identity and permissions before executing the action. This includes restrictions for user-owned updates and admin-only operations.
+
+Common security behaviors in the project:
+
+- Missing JWT token => unauthorized request
+- Invalid role or insufficient permission => forbidden request
+- Protected operations are validated before business logic execution
+
+## Prerequisites
+
+Before running the project locally, ensure the following are available:
+
+- Java 17+
+- Maven
+- MongoDB instance running locally or remotely
+- Valid environment variables for JWT and service URLs
 
 ## Environment Variables
 
-The following environment variables are required:
+Set the required variables before starting any service.
 
-- MONGODB_URI
-- JWT_SECRET
-- DRIVER_SERVICE_URL
+| Variable | Used By | Purpose |
+|---|---|---|
+| `JWT_SECRET` | All services | Shared secret for JWT validation |
+| `MONGODB_URI` | Ride/fare services | MongoDB connection string |
+| `ACCOUNT_SERVICE_URL` | Driver service | Base URL for the Account Service |
+| `DRIVER_SERVICE_URL` | Ride service | Base URL for the Driver & Vehicle Service |
+| `RIDE_SERVICE_URL` | Fare service | Base URL for the Ride Management Service |
 
-Default Driver Service URL:
+Example PowerShell configuration:
 
-http://localhost:8082
+```powershell
+$env:JWT_SECRET = "your-secret-key"
+$env:MONGODB_URI = "mongodb://localhost:27017/ridelink_ride_db"
+$env:ACCOUNT_SERVICE_URL = "http://localhost:8081"
+$env:DRIVER_SERVICE_URL = "http://localhost:8082"
+$env:RIDE_SERVICE_URL = "http://localhost:8083"
+```
 
-Do not commit database passwords, JWT secrets, or access tokens.
+## Running the Project
 
-## Driver Service Integration
+Open a terminal for each service and start it separately.
 
-The Ride Management Service communicates with the Driver & Vehicle Service on port 8082.
+### Account Service
 
-When an ADMIN assigns a driver:
+```bash
+cd account-service
+./mvnw spring-boot:run
+```
 
-1. Ride Service receives the driver ID.
-2. Ride Service calls GET /api/drivers/{id}.
-3. It verifies that the driver exists.
-4. It verifies that availability is AVAILABLE.
-5. It stores the driver ID in the ride.
-6. Ride status changes from REQUESTED to ASSIGNED.
+### Driver & Vehicle Service
 
-## Running the Ride Management Service
+```bash
+cd driver-vehicle-service
+./mvnw spring-boot:run
+```
 
-Navigate to:
+### Ride Management Service
 
-C:\Users\Dr.PC\Desktop\IT3130-RideLink\ride-management-service
+```bash
+cd ride-management-service
+./mvnw spring-boot:run
+```
 
-Then run:
+### Fare & Payment Service
 
-mvn spring-boot:run
+```bash
+cd fare-payment-service
+./mvnw spring-boot:run
+```
 
-Ride Service URL:
+### Default service URLs
 
-http://localhost:8083
+- Account Service: http://localhost:8081
+- Driver & Vehicle Service: http://localhost:8082
+- Ride Management Service: http://localhost:8083
+- Fare & Payment Service: http://localhost:8084
 
-## Swagger / OpenAPI
+## Swagger / OpenAPI Documentation
 
-Swagger UI is available while the Ride Management Service is running:
+When each service is running, Swagger UI is available at:
 
-http://localhost:8083/swagger-ui.html
+```text
+http://localhost:<service-port>/swagger-ui.html
+```
 
-JWT Bearer authentication can be supplied using the Swagger Authorize option.
+Examples:
 
-## Automated Tests
+- http://localhost:8083/swagger-ui.html
+- http://localhost:8084/swagger-ui.html
 
-Run all Ride Management tests with:
+## API Testing
 
-mvn test
+The repository includes Postman collections for testing the services:
 
-Current verified result:
+- [postman/RideLink-Complete.postman_collection.json](./postman/RideLink-Complete.postman_collection.json)
+- [postman/RideLink-Ride-Management.postman_collection.json](./postman/RideLink-Ride-Management.postman_collection.json)
+- [postman/RideLink-Local.postman_environment.json](./postman/RideLink-Local.postman_environment.json)
 
-- Tests run: 18
-- Failures: 0
-- Errors: 0
-- Skipped: 0
-- BUILD SUCCESS
+These collections support local testing of login flows, rides, and service interactions.
 
-The tests cover:
+## Testing
 
-- Ride lifecycle
-- Invalid lifecycle transitions
-- Driver availability validation
-- JWT authentication
-- Role-based authorization
-- Application context loading
+Run tests in any service with:
 
-## Manual End-to-End Verification
+```bash
+./mvnw test
+```
 
-The following lifecycle was successfully tested:
+The project includes automated tests covering:
 
-REQUESTED -> ASSIGNED -> ACCEPTED -> IN_PROGRESS -> COMPLETED
+- account creation and login
+- security and JWT validation
+- driver and vehicle management logic
+- ride lifecycle state transitions
+- role-based authorization
+- application context startup
+- fare calculation and payment processing
 
-Negative lifecycle test:
+## Notes
 
-COMPLETED -> START = 409 Conflict
+- This project is developed as a multi-service backend for a ride-sharing application.
+- Each service is independently executable and owns a distinct business responsibility.
+- MongoDB is used as the persistence layer for all services.
+- The codebase is structured to be a strong academic example of microservice architecture, service integration, and secure API design.
 
-Security verification:
+## Contributor Context
 
-- No JWT token -> 401 Unauthorized
-- PASSENGER accessing ADMIN-only endpoint -> 403 Forbidden
+This repository was developed as a group assignment for IT3130 Application Development. It demonstrates a realistic backend setup for managing a ride-sharing platform across separate service domains.
 
-## Postman Collection
+## License
 
-Postman collection:
-
-postman/RideLink-Ride-Management.postman_collection.json
-
-The collection includes login requests and all Ride Management endpoints.
-Passwords and JWT tokens are not stored in the committed collection.
-
-## Related Services
-
-| Service | Port |
-|---|---|
-| Account Service | 8081 |
-| Driver & Vehicle Service | 8082 |
-| Ride Management Service | 8083 |
-
-## Member 3 Completed Work
-
-- Ride creation and retrieval
-- Ride lifecycle management
-- Ride cancellation
-- Lifecycle validation
-- Error handling
-- JWT authentication
-- Role-based authorization
-- Swagger / OpenAPI
-- Unit tests
-- Security tests
-- Driver Service integration
-- Driver availability validation
-- Postman collection
-- End-to-end lifecycle testing
-
-## Remaining Group-Level Work
-
-- Fare / Payment Service integration verification
-- CI / GitHub Actions verification
-- Final Pull Request and code review
-- Final integration testing
-- Demo / viva preparation
+This project is intended for academic and learning use within the coursework environment.
